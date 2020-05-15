@@ -9,29 +9,32 @@ the other is "Job Status API" . Job search API helps you search for jobs based o
 if a particular job given to you earlier is still still live and posted on the parent website.
 
 This document covers the concepts related to API, its usage and some illustrative examples. It illustrates various use case. For help with 
-specific queries, you may also check our query buidler helper at TODO https://app.jobspikr.com/organizations/mycompany2/query_builder
+specific queries, you may also check our query buidler helper at https://app.jobspikr.com/my/query_builder
 
 
 ## Concepts
 
-Details on some of the concepts to better use our API. 
+Details on some of the concepts to better use our API.
+
 ### API URL and API KEY
 
 Our regular end point is https://api.jobspikr.com/v2 . In case of persistent issues, you may also use https://api-bcp.jobspikr.com/v2 
-as the fallback. To interact with the API, you need API key. Which can be gotten from the link https://app.jobspikr.com/my/?? . 
-You'll see two keys. First is for sandbox and other one is for production. Data obtainted via sandbox is not paid, whereas one using the
-production key is reduced from your available credit.
+as the fallback. To interact with the API, you need API key. Which can be gotten from the link https://app.jobspikr.com/my/api_details#authentication. 
+You'll see two keys. First is for production and other one is for sandbox. Data obtainted using Sanbox credentials will not be deducted from your credits.
+Also our Sanbox API contains only a subset of job data from 1 June 2019 -31 July 2019.
 
 ### Authentication
-The Jobspikr API uses API keys to authenticate your requests. You can view and manage your API keys here. TODO
+
+The Jobspikr API uses API keys to authenticate your requests. You can view and manage your API keys here https://app.jobspikr.com/my/api_details#authentication
 
 Authentication to the API is performed via HTTP Basic Auth. Provide your client_id as username and client_auth_key as password in the basic auth to authenticate your requests.
 While making GET or POST request, you may also pass these fields in header with the field name client_id and client_auth_key and authentication will work as long as values are correct :)
+
 ### Job credit
 
-Job credit is a way for us to measure usage from billing point of view. Each job from production key _downloaded_ or _retrieved via api_ 
-counts towards credit. Jobs accessed from the sandbox don't count towards anything . Sanbox jobs are generally old and ver small subset
-mainly to test the API and itegration.
+Job credit refers to each job data that is consumed from our platform. These credits are valid as per your billing cycle.
+Each job consumed using production key _via api_ or _downloaded_ via UI counts towards credit. Jobs accessed from the sandbox api don't count towards anything. 
+Jobs available on Sanbox API are only a subset of job data from 1 June 2019 -31 July 2019.
 
 
 ## API Query and Result Data format
@@ -62,13 +65,13 @@ API or file download and we run the deduplication process for the counts every 1
 
 ### What is the period in which job credits is counted and duplicates ignored
 
-Job credits and ignoring of duplicate fetches either via API or file download , runs for each monthly billing period TODO. After which these are reset.
+Job credits and ignoring of duplicate fetches either via API or file download , runs for each monthly billing period 30 day period.
+After which these are reset to your original credits from your billing plan.
 
 ### I am getting too many results for my queries
 
 This happens if your queries are too generic. We suggest you try to restrict the search term, post dates or location to get specific results. 
-Some of these cases are explained in example below. Please go over them and if issue still persists please reach out to us on support channel or
-reach out to your account manager.
+Some of these cases are explained in example below. Please go over them and if issue still persists please reach out to us on support channel.
 
 ### Where can I get more details about search query json 
 
@@ -99,23 +102,18 @@ Some of the common issues which developers have faced in past.
 2019-11-18: Added Job status API
 
 
-
-
-
-
-
 # Group Job Search API.
 
 ## Details of the Search API [/data]
 
-### Job Search Using GET Requests [GET]
+### Job Search Using GET Requests [POST]
 
 This end point is the workhorse of the API.  backbone of API can Regular job searches. Please note that even though this is a GET request, even the POST request gives 
 the same result. Which we have illustrated later
 
 Fields in Request Header
-- client_id (string) - This is your client id which can be obtained from here TODO The question
-- client_auth_key (string) - Client auth key can be obtained from here TODO. Please use sandbox key for testing and production key for the actual key so that your job credits are not lost in testing
+- client_id (string) - This is your client id which can be obtained from here https://app.jobspikr.com/my/api_details#authentication. The question
+- client_auth_key (string) - Client auth key can be obtained from here https://app.jobspikr.com/my/api_details#authentication. Please use Sandbox API for testing our API responses, so that your job credits are not lost while testing our API.
 
 
 Fields in Request Body
@@ -126,7 +124,7 @@ Fields in Request Body
 
 - format (String,OPTIONAL) - The format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'.
 
-- cursor (String,OPTIONAL) - This for pagination. API response can contain a maximum of 100 records but if there are 2000 records present and to get everything, you can use this cursor argument. This argument should not be a part of search query json and should always be sent separately as mentioned here.
+- cursor (String,OPTIONAL) - This for pagination. API response can contain a maximum of 100 records but if there are 2000 records present and to get everything, you can use this cursor argument. This argument should not be mentioned inside of _search_query_json_ and should always be sent separately as mentioned here.
     
     _How to use the cursor?_ - Send a request with/without cursor. Take the next_cursor value from the response. Use it as the value for cursor argument in the next request body.
     Repeat this unless you get ‘status’:‘no_data’ to consume all the data for the query.
@@ -149,10 +147,10 @@ Depending upon whether 'json' or 'xml' was passed in format field of query,  A J
 
 - message -  The message explaining the status of the response.
 - total_count - Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the next_cursor in subsequent request to get all the data.
+- job_credit_remaining -  Number of job data that is left to be consumed as per the plan subscription.
+- job_data - An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query.
 - next_cursor - The cursor to be used in the next resquest to get the subsequent data for the query.
 - size - Number of records  present in the current response
-- job_credit_remaining -  Number of job data that is left to be consumed as per the plan subscription.
-- job_data - An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
 
 + Request (application/json)
   
@@ -233,7 +231,7 @@ Depending upon whether 'json' or 'xml' was passed in format field of query,  A J
         + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
 
 
-### Job Search Using POST Request [POST]
+### Job Search Using GET Request [GET]
 
 Above query and in general all the queries illulstrated here work for POST as well as GET. In other places we have
 used GET for uniformity, but if you prefer POST then that should work equally well. Please click on the link above to
