@@ -1,0 +1,3730 @@
+FORMAT: 1A
+HOST: https://api.jobspikr.com/v2
+
+# jobspikr
+
+
+Jobspikr API helps you interact and use the data provided by Jobspikr. There are two APIs here, first is the "Job Search API" and 
+the other is "Job Status API" . Job search API helps you search for jobs based on various criteria and the Job status API helps you check 
+if a particular job given to you earlier is still still live and posted on the parent website.
+
+This document covers the concepts related to API, its usage and some illustrative examples. It illustrates various use case. For help with 
+specific queries, you may also check our query buidler helper at TODO https://app.jobspikr.com/organizations/mycompany2/query_builder
+
+
+## Concepts
+
+Details on some of the concepts to better use our API. 
+### API URL and API KEY
+
+Our regular end point is https://api.jobspikr.com/v2 . In case of persistent issues, you may also use https://api-bcp.jobspikr.com/v2 
+as the fallback. To interact with the API, you need API key. Which can be gotten from the link https://app.jobspikr.com/my/?? . 
+You'll see two keys. First is for sandbox and other one is for production. Data obtainted via sandbox is not paid, whereas one using the
+production key is reduced from your available credit.
+
+### Authentication
+The Jobspikr API uses API keys to authenticate your requests. You can view and manage your API keys here. TODO
+
+Authentication to the API is performed via HTTP Basic Auth. Provide your client_id as username and client_auth_key as password in the basic auth to authenticate your requests.
+While making GET or POST request, you may also pass these fields in header with the field name client_id and client_auth_key and authentication will work as long as values are correct :)
+### Job credit
+
+Job credit is a way for us to measure usage from billing point of view. Each job from production key _downloaded_ or _retrieved via api_ 
+counts towards credit. Jobs accessed from the sandbox don't count towards anything . Sanbox jobs are generally old and ver small subset
+mainly to test the API and itegration.
+
+
+## API Query and Result Data format
+
+All the input and params passed to the API should be in UTF-8 and in json format. Response can be either in JSON(defualt) or XML format.
+Response will always have two fields "status" and "message" . Other fields in the response might vary depending upon the query type and will 
+be described later in this document.
+
+### Cursor in API Query  for pagination
+
+Our API supports cursor. Which is primarily a mechanism to enable records in smaller chunks when overall number of records is too
+high.
+How to use the cursor?
+Send a request with/without cursor. (TODO in the first request how do you send cursor ?)
+Take the next_cursor value from the response.
+Use it as the value for cursor argument in the next request body.
+Repeat this unless you get ‘status’:‘no_data’ to consume all the data for the query.
+
+
+
+## Frequently Asked Questions
+
+### Will I be charged for duplicate job downloads
+
+Even though you might receive same records if you run same query multiple times or across different queries,(correctly), you might get the same 
+job records. You'll be charged only for unique records. As of now , counter in the dashboard at TODO shows currently aggregate fetched records either via
+API or file download and we run the deduplication process for the counts every 1 hour.
+
+### What is the period in which job credits is counted and duplicates ignored
+
+Job credits and ignoring of duplicate fetches either via API or file download , runs for each monthly billing period TODO. After which these are reset.
+
+### I am getting too many results for my queries
+
+This happens if your queries are too generic. We suggest you try to restrict the search term, post dates or location to get specific results. 
+Some of these cases are explained in example below. Please go over them and if issue still persists please reach out to us on support channel or
+reach out to your account manager.
+
+### Where can I get more details about search query json 
+
+Right here :) This field is basically what is supported by ES TODO
+Search query json basically supports lucene query syntax. That way elasticsearch Query syntax will work here TODO. In our example section we have shared some illustrative
+examples and encourage you to try out whichever is closest to your requirement and play around with it TODO here are the examples for term query, boolean,range query etc. In case you still feel, more help is needed, please reach out to our
+support or your dedicated account manager.
+
+
+### Where can I get more details job schema that you give
+
+TODO give link to definitive schema
+
+
+
+##  Troubleshooting
+
+Some of the common issues which developers have faced in past.
+
+### I am getting only old records
+
+### My key is not workign
+
+
+## API Changelog
+
+2019-12-21 : Added option for freshness check
+2019-11-18: Added Job status API
+
+
+
+
+
+
+
+# Group Job Search API.
+
+## Details of the Search API [/data]
+
+### Job Search Using GET Requests [GET]
+
+This end point is the workhorse of the API.  backbone of API can Regular job searches. Please note that even though this is a GET request, even the POST request gives 
+the same result. Which we have illustrated later
+
+Fields in Request Header
+- client_id (string) - This is your client id which can be obtained from here TODO The question
+- client_auth_key (string) - Client auth key can be obtained from here TODO. Please use sandbox key for testing and production key for the actual key so that your job credits are not lost in testing
+
+
+Fields in Request Body
+
+- search_query_json (String,REQUIRED) - Search query generated by you for which the data will be returned. This search query string takes a JSON object as input. To know more about how to construct the search query please read this or explore our query builder.
+
+- size (String,OPTIONAL)-  The number of records to be returned for this request. It can be between 10 and 100. This is an optional parameter with a default value of 100. Size should not be a part of search query json and should be always sent separately as mentioned here.
+
+- format (String,OPTIONAL) - The format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'.
+
+- cursor (String,OPTIONAL) - This for pagination. API response can contain a maximum of 100 records but if there are 2000 records present and to get everything, you can use this cursor argument. This argument should not be a part of search query json and should always be sent separately as mentioned here.
+    
+    _How to use the cursor?_ - Send a request with/without cursor. Take the next_cursor value from the response. Use it as the value for cursor argument in the next request body.
+    Repeat this unless you get ‘status’:‘no_data’ to consume all the data for the query.
+
+
+
+Fields in Response Body
+
+
+
+Depending upon whether 'json' or 'xml' was passed in format field of query,  A JSON or XML object will be returned all the following properties.
+
+- status - The status of the response. It can be either these three
+    
+    _'success'_, if the request is processed successfully and data is returned.
+
+    _'no_data'_ in case request is processes successfully but there is no more data present for the given query.
+
+    _'error'_ in case of the some problem with processing the request.
+
+- message -  The message explaining the status of the response.
+- total_count - Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the next_cursor in subsequent request to get all the data.
+- next_cursor - The cursor to be used in the next resquest to get the subsequent data for the query.
+- size - Number of records  present in the current response
+- job_credit_remaining -  Number of job data that is left to be consumed as per the plan subscription.
+- job_data - An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "\"techincal writer\""
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+
+### Job Search Using POST Request [POST]
+
+Above query and in general all the queries illulstrated here work for POST as well as GET. In other places we have
+used GET for uniformity, but if you prefer POST then that should work equally well. Please click on the link above to
+open console to try out POST request for search. All the description and details remains same as the GET request above TODO give link
+
+
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "\"techincal writer\""
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor: cursor_value (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - The format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + `total_count` - Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + next_cursor - The cursor to be used in the next resquest to get the subsequent data for the query.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+
+
+# Group Examples of Job search API 
+
+In this section we'll cover some common use cases. You may use these as starting template and try out various changes. Another helpful tool for playing around with query is
+our API Query Builder at (TODO) .  Can we embed it there?
+
+## Job search API Examples [/data]
+
+
+### Find all jobs with marketing in title [GET]
+
+Queries like these can be done by populating the query string. Which takes query and optionally default_field where to search
+
+TODO Desc
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "marketing"
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+        
+        
+        
+
+### Find all jobs with marketing in title, xml out [GET]
+
+This is same as the previous query, and more to illustrate the xml output. Rest of
+the examples are marked for json output, however if you need, you may change the format parameter
+in input to xml and in response you'll get xml
+
+TODO Desc
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "marketing"
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+        
+        
+        
+
+
+### Find all jobs with sales in description [GET]
+
+TODO Desc
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_description",
+                    "query": "sales"
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+        
+        
+        
+
+### Find all jobs with sales or marketing in title [GET]
+
+This is a variation of previous query, where you can use 'OR'
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "sales OR marketing"
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+        
+        
+### Find all jobs with sales manager or marketing manager in title [GET]
+
+This is a variation of previous query, where you can use 'OR'
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "\"sales manager\" OR \"marketing manager\""
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+            
+        
+### Find all jobs with  where salary exists TODOLATER [GET]
+
+This can be checked with "exists" check on a field
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "\"techincal writer\""
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+        
+        
+        
+### Finding all jobs where email address exists TODOLATER bool query [GET]
+It is a simple variation of previous query. Given how often clients ask for it, we have added it here:)
+TODO give the search query. Also a note - that not many jobs will have email. Look at it this way when
+we post job openings for our own we seldom give out email link to reach out.
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "\"techincal writer\""
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+        
+        
+        
+
+### Finding all the jobs posted between 9th April 2019 and 11th April 2019 [GET]
+
+This example illustrates use of Range query and is mostly useful for date checks.
+TODO give query string 
+TODO can the check be done on salary too ?
+TODO can it be day range from today ?
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                    "range": {
+                        "post_date": {
+                        "gte": "2019-07-01",
+                        "lte": "2019-07-07"
+                                    }
+                                }
+                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+        
+        
+        
+### Bool query TODO do we need it, else we can give this example in the end [GET]
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "\"techincal writer\""
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+        
+        
+        
+
+
+
+
+
+
+        
+        
+### Find all jobs from London [GET]
+
+In the above examples we covered generic cases and most of the queries can be built
+using some modification / variation of those. In the next few examples we'll cover location
+based queries in more detail to illustrate various use cases.
+Location based job searches
+
+Desc TODO
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                    "bool": {
+                    "should": [
+                    {
+                        "bool": {
+                        "must": [
+                                {
+                            "query_string": {
+                            "fields": [
+                            "country",
+                            "inferred_country"
+                            ],
+                            "query": "\"United States\" OR \"USA\" OR \"United States\" OR \"US\""
+                            }
+                            },
+                            {
+                            "query_string": {
+                            "fields": [
+                                "state",
+                                "inferred_state"
+                                ],
+                                "query": "\"Texas\" OR \"tx\""
+                                }
+                                },
+                                {
+                                "query_string": {
+                                    "fields": [
+                                        "city",
+                                        "inferred_city"
+                                            ],
+                                        "query": "\"Austin\""
+                                }
+                                }
+                                ]
+                                }
+                                }
+                                ]
+                        }
+                    }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+        
+        
+### Find all jobs from Austin or Paris [GET]
+
+In the above examples we covered generic cases and most of the queries can be built
+using some modification / variation of those. In the next few examples we'll cover location
+based queries in more detail to illustrate various use cases.
+Location based job searches
+
+Desc TODO
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "bool": {
+                "should": [
+                    {
+                    "bool": {
+                    "must": [
+                        {
+                        "query_string": {
+                        "fields": [
+                        "country",
+                        "inferred_country"
+                        ],
+                        "query": "\"United States\" OR \"USA\" OR \"United States\" OR \"US\""
+                        }
+            },
+            {
+                "query_string": {
+                "fields": [
+                "state",
+                "inferred_state"
+            ],
+            "query": "\"Texas\" OR \"tx\""
+            }
+            },
+            {
+                "query_string": {
+                "fields": [
+                "city",
+                "inferred_city"
+                ],
+                "query": "\"Austin\""
+                }
+                }
+                ]
+                }
+                },
+                {
+            "bool": {
+            "must": [
+                {
+                "query_string": {
+                "fields": [
+                "country",
+                "inferred_country"
+                ],
+                "query": "\"France\""
+                }
+                },
+                {
+                "query_string": {
+                    "fields": [
+                    "state",
+                    "inferred_state"
+                    ],
+                "query": "\"Ile-de-France\""
+                }
+                },
+                {
+                    "query_string": {
+                    "fields": [
+                    "city",
+                    "inferred_city"
+                    ],
+                    "query": "\"Paris\""
+                }
+                }
+                ]
+                }
+                }
+                ]
+                }
+                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+          
+        
+        
+### Find all jobs from boston or seattle #Jobs listing from  many locations [GET]
+
+Getting jobs from multiple location
+
+Desc TODO
+
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "\"techincal writer\""
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+        
+        
+        
+### Find all jobs from United Kingdom [GET]
+
+Using country or state in location searches
+
+Desc TODO
+
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                 
+                "search_query_json": {
+                "bool": {
+                "should": [
+                    {
+                    "bool": {
+                    "must": [
+                        {
+                        "query_string": {
+                        "fields": [
+                        "country",
+                        "inferred_country"
+                        ],
+                        "query": "\"United Kingdom\" OR \"England\" OR \"Scotland\" OR \"Northern Ireland\" OR \"Wales\" OR \"UK\" OR \"United Kingdom\""
+                        }
+                        }
+                        ]
+                        }
+                        }
+                        ]
+                        }
+                }
+                
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+
+        
+### SEarching for all the jobs in Australia TODO [GET]
+
+Desc TODO
+
+
+    
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "\"techincal writer\""
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+
+### Concept being illustrated here is doing range query TODO to copy paste previous range query [GET]
+
+Lot of times we have query like all the jobs posted for a particular criteria in last two days
+
+Desc TODO
+
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "\"techincal writer\""
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+
+### Get me list of all jobs posted in last 2 days TODO TO add in the api, todo need to add it in api  [GET]
+
+
+Desc TODO
+
+    
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "\"techincal writer\""
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+
+### Get me list of all jobs posted in last 2 days TODO looks dup of qn just above [GET]
+
+Desc TODO
+
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "\"techincal writer\""
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+        
+### All jobs with architect in title  , todo explain why quotes might be needed s/w architect vs construction arch  [GET]
+
+This example illustrates how to search for a given word of interest in the
+job title
+
+Desc TODO
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "\"techincal writer\""
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+
+        
+### All the jobs which have analytics in it   [GET]
+
+This example illustrates the use case of searching in multiple fields
+
+
+Desc TODO
+
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "fields": ["job_title","job_description"]
+                    "query": "analytics""
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+        
+
+### Searching for specific kind of jobs like only IT Jobs TODO need to dig our tickets [GET]
+
+Desc TODO, explain that it is heuristics, and that category normalization is work in progress
+    
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "\"techincal writer\""
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+        
+### Exact match vs partial match and use of quotes [GET]
+
+One common scenario is when we search for 'Product Manager'
+vs Product Manager. Use of quotes makes lot of difference
+
+Desc TODO  
+    
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "\"techincal writer\""
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+
+        
+### Find all 'product manager' jobs from USA  [GET]
+
+In this query we combine search over two fields , location as well as job title
+
+Desc TODO, bool query, with AND across two fields
+    
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "search_query_json": {
+                "bool": {
+                "must": [
+                {
+                "query_string": {
+                "default_field": "job_title",
+                "query": "\"product manager\""
+                }
+                },
+                {
+                "bool": {
+                "should": [
+                {
+                "bool": {
+                "must": [
+                {
+                "query_string": {
+                "fields": [
+                "country",
+                "inferred_country"
+                ],
+                "query": "\"United States\" OR \"USA\" OR \"United States\" OR \"US\""
+                }
+                }
+                ]
+                }
+                }
+                ]
+                }
+                }
+                ]
+                }
+                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+        
+
+        
+### Find "Marketing Manager" jobs across United Kingdom, excluding London. [GET]
+
+Desc TODO get details on bool query mapping, and/must/should etc from shiva and put in api explainer
+ 
+    
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "bool": {
+                "must": [
+                {
+                "query_string": {
+                "fields": [
+                "country",
+                "inferred_country"
+                ],
+                "query": "\"United Kingdom\" OR \"England\" OR \"Scotland\" OR \"Northern Ireland\" OR \"Wales\" OR \"UK\" OR \"United Kingdom\""
+                }
+                }
+                ]
+                }
+                },
+                "must_not": [
+                {
+                "bool": {
+                "must": [
+                {
+                "query_string": {
+                "fields": [
+                "country",
+                "inferred_country"
+                ],
+                "query": "\"United Kingdom\" OR \"England\" OR \"Scotland\" OR \"Northern Ireland\" OR \"Wales\" OR \"UK\" OR \"United Kingdom\""
+                }
+                },
+                {
+                "query_string": {
+                "fields": [
+                "state",
+                "inferred_state"
+                ],
+                "query": "*"
+                }
+                },
+                {
+                "query_string": {
+                "fields": [
+                "city",
+                "inferred_city"
+                ],
+                "query": "\"London\""
+                }
+                }
+                ]
+                }
+                }
+                ]
+
+
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+        
+### Find all company job postings from New York - i.e., exclude agency-posted jobs. [GET]
+
+Desc TODO can't be right now
+
+    
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "\"techincal writer\""
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+        
+### Find "Data Scientist" jobs from Australi or Newzealand(adding multiple countries/locations) [GET]
+
+Desc TODO
+
+    
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "\"techincal writer\""
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+
+        
+### Searching for IT Jobs in given post dates [GET]
+
+Desc TODO later
+
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "\"techincal writer\""
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+        
+
+### Jobs with title manager, but excluding sales in both title and description [GET]
+
+
+
+Desc TODO
+
+    
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "bool": {
+                "must": [
+                {
+                    "query_string": {
+                    "default_field": "job_title",
+                    "query": "\"manager\""
+                }
+                }
+                ],
+                "must_not": [
+                {
+                "query_string": {
+                "fields": [
+                "job_title",
+                    "job_description"
+                ],
+                "query": "sales"
+                }
+                }
+                ]
+                }
+                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+        
+### Searching for all transport jobs [GET]
+
+Desc TODO, right now not possible directly, migth come later
+
+    
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "\"techincal writer\""
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+        
+### How to get only valid jobs(the ones which have not expired) [GET]
+
+Desc TODO will come back later.
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "\"techincal writer\""
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+        
+### How to get only unique jobs after ignoring duplicates [GET]
+
+Desc TODO todo will come back later. TODO not all plans support it.
+
+    
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "exclude_duplicates": true
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "\"techincal writer\""
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+        
+
+### Find all the jobs posted by promptcloud [GET]
+
+Desc TODO
+
+    
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "company_name",
+                    "query": "promptcloud"
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+        
+### Using cursor for Paginations [GET]
+
+Desc TODO prashant
+
+    
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "\"techincal writer\""
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+        
+### I have 100k jobs in API response, how do I retrieve all of those [GET]
+
+Desc TODO
+
+
+    
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "\"techincal writer\""
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Data present.",
+                "next_cursor": 1576566168294049,
+                "total_count": 8,
+                "size": 8,
+                "job_credit_remaining": 65459,
+                "job_data": [
+                {
+                "job_type": "Full Time",
+                "cursor": 1576562594581424,
+                "inferred_country": "Sweden",
+                "country": "SE",
+                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                "city": "Stockholm",
+                "inferred_city": "Stockholm",
+                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                "geo": "se",
+                "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                "job_board": "careerbuilder",
+                "state": "Stockholms län",
+                "inferred_state": "Stockholm",
+                "post_date": "2019-12-16",
+                "company_name": "Academic Work",
+                "category": "Sales Engineers",
+                "job_title": "Technical Writer till Worldline"
+                },
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
+        + message - Message explaining the status of the response
+        + next_cursor -  The cursor to be used in the next resquest to get the subsequent data for the query.
+        + `total_count` -  Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
+        + size - Number of records  present in the current response
+        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
+        + job_data -  An array of objects of job data. Format could be json or xml, depending upon what was passed in the format field in query
+
+
+
+
+# Group Job Status API
+
+
+## Job Status EndPoint [/active_jobs_checker]
+
+### Check if given uniq_ids are still active [GET]
+
+Here you can pass a list of uniq ids and check if those are still listed on the site.
+
+Fields in Request Header
+
+- client_id (string) - This is your client id which can be obtained from here TODO The question
+- client_auth_key (string) - Client auth key can be obtained from here TODO. Please use sandbox key for testing and production key for the actual key so that your job credits are not lost in testing
+
+Fields in Request Body
+
+- uniq_ids : (Array[String],Conditionally REQUIRED) : Uniq ids of the job data that is consumed from JobspikrAPI in an array. Either uniq_ids or job_urls must be present in the request body.
+- job_urls : (Array[String],Conditionally REQUIRED) : Job urls of the job data that is consumed from JobspikrAPI in an array. Either uniq_ids or job_urls must be present in the request body.
+
+- format (OPTIONAL) : The format of the response from the API. Its an optional field with the default value as json.
+
+
+Fields in Response Body
+
+Depending upon whether 'json' or 'xml' was passed in format field of query,  A JSON or XML object will be returned all the following properties.
+
+- status : The status of the response. It can have one of 2 values : 'success' or 'error' .
+
+- message : The message explaining the status of the response
+
+- active_check_remaining_credits : Number of remaining job active/inactive status check credits for your organization
+
+- job_data : Array of all the job data based on the uniq ids passed in the request with information related to the active/inactive status of the job.
+
+- missing_uniq_ids :  An Array of all uniq_ids passed which doesn't have a matching job present.
+
+- missing_job_urls : An Array of all job_urls passed which doesn't have a matching job present.
+
++ Request (application/json)
+
+    + Body
+        
+            {
+            "uniq_ids": [
+            "ac754bb31ec4be4cab4ac56051a71115",
+            "749755fab2400b6d1b9dfd4de8b47b82",
+            "9031f9822ce05123e1c1f85a17681731",
+            "1031f982281e0512121c1f85a17js173"
+            ]
+            }
+    + Headers 
+
+            client_id: Replace with your client_id
+            client_auth_key:  Replace with your client_auth_key
+    
+    + Attributes
+            
+        + `uniq_ids` : `uniq_ids` (string,optional) - Uniq ids of the job data that is consumed from JobspikrAPI in an array. Either `uniq_ids or job_urls` must be present in the request body.
+        + `job_urls` : `job_urls` (string,optional) - Job urls of the job data that is consumed from JobspikrAPI in an array. Either `uniq_ids` or `job_urls` must be present in the request body.
+        + format: json (string) -  Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+            
+
++ Response 200 (application/json)
+
+    + Body
+        
+            {
+                "status": "success",
+                "message": "Data present.",
+                "freshness_check_remaining_credits": 9135,
+                "job_data": [
+                { 
+                    "uniq_id":"ac754bb31ec4be4cab4ac56051a71115",
+                    "url": "https://www.reed.co.uk/jobs/fleet-administrator-maternity-cover/39571333?source=searchResults#/jobs/admin-secretarial-pa-jobs?sortby=DisplayDate",
+                    "has_expired": "false",
+                    "latest_expiry_check_date": "2019-12-17",
+                    "post_date": "2019-12-16"
+                },
+                {
+                    "uniq_id": "749755fab2400b6d1b9dfd4de8b47b82",
+                    "url": "https://www.reed.co.uk/jobs/customer-service-administrator/39573809?source=searchResults#/jobs/admin-secretarial-pa-jobs?sortby=DisplayDate",
+                    "has_expired": "false",
+                    "latest_expiry_check_date": "2019-12-17",
+                    "post_date": "2019-12-16"
+                }
+                       ],
+                "missing_uniq_ids": [
+                    "9031f9822ce05123e1c1f85a17681731",
+                    "1031f982281e0512121c1f85a17js173"
+                    ]
+            } 
+        
+    + Attributes
+
+        + status - The status of the response. It can have one of 2 values - 'success' or 'error' .
+        + message - The message explaining the status of the response
+        + active_check_remaining_credits - Number of remaining job active/inactive status check credits for your organization
+        + job_data - Array of all the job data based on the uniq ids passed in the request with information related to the active/inactive status of the job.
+        + missing_uniq_ids - An Array of all uniq_ids passed which doesn't have a matching job present.
+        + missing_job_urls - An Array of all job_urls passed which doesn't have a matching job present.
+      
+### Check if given uniq_ids are still active [POST]
+
+Previous query for checkign current status of job you can use POST method too. It takes a list of uniq_ids or urls and returns the result
+
+All the description and details remains same as the GET query above TODO give link
+
+
++ Request (application/json)
+
+    + Body
+        
+            {
+            "uniq_ids": [
+            "ac754bb31ec4be4cab4ac56051a71115",
+            "749755fab2400b6d1b9dfd4de8b47b82",
+            "9031f9822ce05123e1c1f85a17681731",
+            "1031f982281e0512121c1f85a17js173"
+            ]
+            }
+    + Headers 
+
+            client_id: Replace with your client_id
+            client_auth_key:  Replace with your client_auth_key
+    
+    + Attributes
+            
+            + `uniq_ids` : `uniq_ids` (array[string],optional) Uniq ids of the job data that is consumed from JobspikrAPI in an array. Either `uniq_ids` or `job_urls` must be present in the request body.
+            + `job_urls` : `job_urls` (array[string],optional) - Job urls of the job data that is consumed from JobspikrAPI in an array. Either `uniq_ids` or `job_urls` must be present in the request body.
+            + format : json (string) -  Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+            
+
++ Response 200 (application/json)
+
+    + Body
+        
+            {
+                "status": "success",
+                "message": "Data present.",
+                "freshness_check_remaining_credits": 9135,
+                "job_data": [
+                { 
+                    "uniq_id":"ac754bb31ec4be4cab4ac56051a71115",
+                    "url": "https://www.reed.co.uk/jobs/fleet-administrator-maternity-cover/39571333?source=searchResults#/jobs/admin-secretarial-pa-jobs?sortby=DisplayDate",
+                    "has_expired": "false",
+                    "latest_expiry_check_date": "2019-12-17",
+                    "post_date": "2019-12-16"
+                },
+                {
+                    "uniq_id": "749755fab2400b6d1b9dfd4de8b47b82",
+                    "url": "https://www.reed.co.uk/jobs/customer-service-administrator/39573809?source=searchResults#/jobs/admin-secretarial-pa-jobs?sortby=DisplayDate",
+                    "has_expired": "false",
+                    "latest_expiry_check_date": "2019-12-17",
+                    "post_date": "2019-12-16"
+                }
+                       ],
+                "missing_uniq_ids": [
+                    "9031f9822ce05123e1c1f85a17681731",
+                    "1031f982281e0512121c1f85a17js173"
+                    ]
+            } 
+        
+    + Attributes
+
+        + status - The status of the response. It can have one of 2 values - 'success' or 'error' .
+        + message - The message explaining the status of the response
+        + active_check_remaining_credits - Number of remaining job active/inactive status check credits for your organization
+        + job_data - Array of all the job data based on the uniq ids passed in the request with information related to the active/inactive status of the job.
+        + missing_uniq_ids - An Array of all uniq_ids passed which doesn't have a matching job present.
+        + missing_job_urls - An Array of all job_urls passed which doesn't have a matching job present.
+
+
+
+
+
+# Group Aggregation API
+
+Description of the aggregation API
+
+## Aggregation API EndPoint [/aggregate_data]
+
+### Retrieve Aggregate Data [GET]
+
+In the example below we'll illustrate the API params as well as an example to aggregate job query ''technical write' to aggregate by company name and country. Like other end points in jobspikr, here too GET and POST both request types will work. Later In the POST example ,we'll illustrate' aggregation by company name and post date
+Fields in Request Header
+
+- client_id (string) - This is your client id which can be obtained from here TODO The question
+- client_auth_key (string) - Client auth key can be obtained from here TODO. Please use sandbox key for testing and production key for the actual key so that your job credits are not lost in testing
+
+Fields in Request Body
+
+- search_query_json (String,REQUIRED) - Search query generated by you for which the data will be returned. This search query string takes a JSON object as input. To know more about how to construct the search query please read this or explore our query builder. In case of aggregate API, instead of returning the job data for this request, the given aggregation will be applied on top of this query.
+- aggregate_by (String,REQUIRED) - The json which instructs the API to aggregate based on the fields provided. Two levels of aggregation are possible
+
+
+
+Some notes w.r.t aggregate_by parameter
+
+- ‘field_1’ mentions the field on top of which the top level aggregation should be done on.
+- ‘size_1’ mentions the number of aggregated results that should be returned form the API for top level aggregation.
+- field_2 mentions the field on top of which the sub aggregation should be done on.
+- ‘size_2’ mentions the number of aggregated results that should be from api for sub aggregation.
+Please note that field_1 or field_2 must be from the following list - ‘company_name’, ‘inferred_country’, ‘post_date’ and If the field parameter is ‘post_date’ then ‘size’ parameter is not required, instead ‘interval’ parameter should be used(value for 'interval' can only be month or quarter
+W.r.t size.  size parameters(size_1, size_2) when used can’t go above 10000.  If only one level of aggregation is used size_1 should be  <= 10000 If two level of aggregations are used size_1 + (size_1 * size_2) should be <= 10000
+
+
++ Request (application/json)
+
+    + Body
+        
+            {
+                "search_query_json": {
+                "query_string": {
+                "default_field": "job_title",
+                "query": "\"technical writer\""
+                }
+                },
+
+                "aggregate_by": {
+                "field_1": "company_name",
+                "size_1": 100,
+                "field_2": "inferrect_country",
+                "size_2": 10
+                }
+            }
+            
+            
+
+    + Headers 
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+                
+
+    + Attributes
+    
+        + `search_query_json`: `search_query_json`(string,REQUIRED) - Same as used throught in jobspikr API, here  instead of returning the job data for this request, the given aggregation will be applied on top of this query.
+        + `aggregate_by`: `aggregate_by` (string,REQUIRED) -  The json which instructs the API to aggregate based on the fields provided. Two levels of aggregation are possible
+
++ Response 200 (application/json)
+
+    + Body
+        
+            {
+                "status": "success",
+                "message": "Data present.",
+                "freshness_check_remaining_credits": 9135,
+               
+            } 
+        
+    + Attributes
+
+        + status - The status of the response. It can have one of 2 values - 'success' or 'error' .
+        + message - The message explaining the status of the response
+        + active_check_remaining_credits - Number of remaining job active/inactive status check credits for your organization
+        + job_data - Array of all the job data based on the uniq ids passed in the request with information related to the active/inactive status of the job.
+        + missing_uniq_ids - An Array of all uniq_ids passed which doesn't have a matching job present.
+        + missing_job_urls - An Array of all job_urls passed which doesn't have a matching job present.
+
+### Retrieve  Aggregate Data [POST]
+
+In the example below we'll illustrate the API params as well as an example to aggregate job query ''technical write' to aggregate by company name and country. Like other end points in jobspikr, here too GET and POST both request types will work. Later In the POST example ,we'll illustrate' aggregation by company name and post date
+Fields in Request Header
+
+- client_id (string) - This is your client id which can be obtained from here TODO The question
+- client_auth_key (string) - Client auth key can be obtained from here TODO. Please use sandbox key for testing and production key for the actual key so that your job credits are not lost in testing
+
+Fields in Request Body
+
+- search_query_json (String,REQUIRED) - Search query generated by you for which the data will be returned. This search query string takes a JSON object as input. To know more about how to construct the search query please read this or explore our query builder. In case of aggregate API, instead of returning the job data for this request, the given aggregation will be applied on top of this query.
+- aggregate_by (String,REQUIRED) - The json which instructs the API to aggregate based on the fields provided. Two levels of aggregation are possible
+
+
+
+Some notes w.r.t aggregate_by parameter
+
+- ‘field_1’ mentions the field on top of which the top level aggregation should be done on.
+- ‘size_1’ mentions the number of aggregated results that should be returned form the API for top level aggregation.
+- field_2 mentions the field on top of which the sub aggregation should be done on.
+- ‘size_2’ mentions the number of aggregated results that should be from api for sub aggregation.
+Please note that field_1 or field_2 must be from the following list - ‘company_name’, ‘inferred_country’, ‘post_date’ and If the field parameter is ‘post_date’ then ‘size’ parameter is not required, instead ‘interval’ parameter should be used(value for 'interval' can only be month or quarter
+W.r.t size.  size parameters(size_1, size_2) when used can’t go above 10000.  If only one level of aggregation is used size_1 should be  <= 10000 If two level of aggregations are used size_1 + (size_1 * size_2) should be <= 10000
+
+
++ Request (application/json)
+
+    + Body
+        
+            {
+                "search_query_json": {
+                "query_string": {
+                "default_field": "job_title",
+                "query": "\"technical writer\""
+                }
+                },
+
+                "aggregate_by": {
+                "field_1": "company_name",
+                "size_1": 100,
+                "field_2": "post_date",
+                "interval": "month"
+                }
+            }
+            
+            
+
+
+    + Headers 
+
+            client_id: Replace with your client_id
+            client_auth_key:  Replace with your client_auth_key
+
+    + Attributes
+    
+        + `search_query_json` : `search_query_json` (string,REQUIRED) - Same as used throught in jobspikr API, here  instead of returning the job data for this request, the given aggregation will be applied on top of this query.
+        + `aggregate_by` : `aggregate_by` (string,REQUIRED) -  The json which instructs the API to aggregate based on the fields provided. Two levels of aggregation are possible
+
++ Response 200 (application/json)
+
+    + Body
+        
+            {
+                "status": "success",
+                "message": "Data present.",
+                "freshness_check_remaining_credits": 9135,
+               
+            } 
+        
+    + Attributes
+
+        + status - The status of the response. It can have one of 2 values - 'success' or 'error' .
+        + message - The message explaining the status of the response
+        + active_check_remaining_credits - Number of remaining job active/inactive status check credits for your organization
+        + job_data - Array of all the job data based on the uniq ids passed in the request with information related to the active/inactive status of the job.
+        + missing_uniq_ids - An Array of all uniq_ids passed which doesn't have a matching job present.
+        + missing_job_urls - An Array of all job_urls passed which doesn't have a matching job present.
