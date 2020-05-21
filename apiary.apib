@@ -59,7 +59,7 @@ All the examples in this documentation send client_id and client_auth_key via He
 * Job credit refers to each job data that is consumed from our platform. 
 * These credits are valid as per your billing cycle.
 * Each job consumed using production key _via api_ or _downloaded_ via UI counts towards credit.
-* exaJobs accessed from API using sandbox credentials don't count towards anything.
+* Jobs accessed from API using sandbox credentials don't count towards anything.
 
 ### Sandbox API
 
@@ -71,72 +71,70 @@ https://app.jobspikr.com/my/api_details#authentication
 * Jobs accessed from API using sandbox credentials don't count towards anything.
 
 
-## API Query and Result Data format
+## Request and Response Data format
 
-All the input and params passed to the API should be in UTF-8 and in json format. Response can be either in JSON(defualt) or XML format.
-Response will always have two fields "status" and "message" . Other fields in the response might vary depending upon the query type and will 
+* All the input and params passed to the API should be in `UTF-8` and in json format.
+* Response can be either in JSON(defualt) or XML format.
+* Response will always have two fields `status` and `message`.
+* Other fields in the response might vary depending upon the endpoint accessed and will 
 be described later in this document.
 
-### Cursor in API Query  for pagination
 
-Our API supports cursor. Which is primarily a mechanism to enable records in smaller chunks when overall number of records is too
+## Cursor in API Query for pagination
+
+Our API supports cursor, which is primarily a mechanism to consume data in smaller chunks when overall number of records is too
 high.
-How to use the cursor?
-Send a request with/without cursor. (TODO in the first request how do you send cursor ?)
-Take the next_cursor value from the response.
-Use it as the value for cursor argument in the next request body.
-Repeat this unless you get ‘status’:‘no_data’ to consume all the data for the query.
 
-
+### How to use the cursor?
+1. Send a request with/without cursor.
+2. Take the next_cursor value from the response.
+3. Use it as the value for cursor argument in the next request body.
+4. Repeat step 2 & 3 untill you get `"status":"no_data"` in the response.
+5. When you get `no_data` it means there are no more data present for the given query at that time. Store the cursor in a file or DB.
+6. Try the sending API request with the stored cursor value after an hour(minimum). If there is any new data added, which satisfies the given query in the last 1 hour it will be returned.
+7. Keep repeating the step from 2-7 to keep getting data.
 
 ## Frequently Asked Questions
 
-### Will I be charged for duplicate job downloads
+### Will I be charged for consuming/downloading same jobs again and again?
 
-Even though you might receive same records if you run same query multiple times or across different queries,(correctly), you might get the same 
-job records. You'll be charged only for unique records. As of now , counter in the dashboard at TODO shows currently aggregate fetched records either via
-API or file download and we run the deduplication process for the counts every 1 hour.
+Even though you consumed same records multiple times - either my making the same query again and again or across different queries satisfying the same condtion -
+your volume credits will be deducted for the unique records consumed in a given credit cycle(30 days period). Counter in the dashboard here https://app.jobspikr.com/ 
+shows the number of unique records consumed either via API or file download. We update this counter every one hour where we get the number of unique records consumed
+so far by your account for the current billing cycle.
 
-### What is the period in which job credits is counted and duplicates ignored
+### What is the period in which job credits is counted and repeated job consumption ignored?
 
-Job credits and ignoring of duplicate fetches either via API or file download , runs for each monthly billing period 30 day period.
-After which these are reset to your original credits from your billing plan.
+Job credits and ignoring of repeated fetches either via API or file download, runs for each credit cycle(30 days period).
+After which the credits are reset as per your billing plan.
 
 ### I am getting too many results for my queries
 
 This happens if your queries are too generic. We suggest you try to restrict the search term, post dates or location to get specific results. 
 Some of these cases are explained in example below. Please go over them and if issue still persists please reach out to us on support channel.
 
-### Where can I get more details about search query json 
+### Where can I get more details about search query json?
 
-Right here :) This field is basically what is supported by ES TODO
-Search query json basically supports lucene query syntax. That way elasticsearch Query syntax will work here TODO. In our example section we have shared some illustrative
-examples and encourage you to try out whichever is closest to your requirement and play around with it TODO here are the examples for term query, boolean,range query etc. In case you still feel, more help is needed, please reach out to our
-support or your dedicated account manager.
+We internally use Elasticsearch to store and retrive all the job records, hence `search_query_json` can take in what ever `query` accepts as per Elasticsearch.
+But we internal use only these two queries to construct all our queries - [query_string](https://www.elastic.co/guide/en/elasticsearch/reference/7.6/query-dsl-query-string-query.html)
+and [bool](https://www.elastic.co/guide/en/elasticsearch/reference/7.6/query-dsl-bool-query.html).
 
+If you don't know Elasticsearch queries,  its not a problem at all. We don't want you to go through those documents as well.
+We've given a extensive list of example explaining [how each and every query is built for multiple scenarios](#reference/examples/job-search-api)
+Going through them should be enough. 
 
-### Where can I get more details job schema that you give
+Also we have a [query builder](https://app.jobspikr.com/my/query_builder) which will help you build the most common queries 
 
-TODO give link to definitive schema
-
-
-
-##  Troubleshooting
-
-Some of the common issues which developers have faced in past.
-
-### I am getting only old records
-
-### My key is not workign
+In case you still feel, more help is needed, please reach out to our support we would be happy to help.
 
 
 ## API Changelog
 
-2019-12-21 : Added option for freshness check
-2019-11-18: Added Job status API
+* 2019-12-21 : Added option for freshness check
+* 2019-11-18 : Added Job status API
 
 
-# Group Job Search API.
+# Group Job Search API
 
 ## Endpoint Details [/data]
 
@@ -147,27 +145,24 @@ the same result. Which we have illustrated later
 
 #### Fields in Request Header
 
-- client_id (string) - This is your unique client identification string to access Jobspikr API
+- client_id `String` `REQUIRED` - This is your unique client identification string to access Jobspikr API
 
-- client_auth_key (string) - This your unique client authentication key to access Jobspikr API
+- client_auth_key `String` `REQUIRED` - This your unique client authentication key to access Jobspikr API
 
 Both `client_id` and `client_auth_key` can be obtained from here. https://app.jobspikr.com/my/api_details#authentication. 
 
-Please use Sandbox API for testing our API responses, so that your job credits are not lost while testing our API.
+Please use Sandbox API credentials for testing our API responses, so that your job credits are not lost while testing our API.
 
 #### Fields in Request Body
 
-- search_query_json (String,REQUIRED) - Search query generated by you for which the data will be returned. This search query string takes a JSON object as input. To know more about how to construct the search query please read this or explore our query builder.
+- search_query_json `JSON` `REQUIRED` - Search query generated by you for which the data will be returned. This search query string takes a JSON object as input. More information on this field can be found [here](#reference/examples/job-search-api)
 
-- size (String,OPTIONAL)-  The number of records to be returned for this request. It can be between 10 and 100. This is an optional parameter with a default value of 100. Size should not be a part of search query json and should be always sent separately as mentioned here.
+- size `String` `OPTIONAL`-  The number of records to be returned for this request. It can be between 10 and 100. This is an optional parameter with a default value of 100. Size should not be a part of search query json and should be always sent separately as mentioned here.
 
-- format (String,OPTIONAL) - The format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'.
+- format `String` `OPTIONAL` - The format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'.
 
-- cursor (String,OPTIONAL) - This for pagination. API response can contain a maximum of 100 records but if there are 2000 records present and to get everything, you can use this cursor argument. This argument should not be mentioned inside of _search_query_json_ and should always be sent separately as mentioned here.
-    
-    _How to use the cursor?_ - Send a request with/without cursor. Take the next_cursor value from the response. Use it as the value for cursor argument in the next request body.
-    Repeat this unless you get ‘status’:‘no_data’ to consume all the data for the query.
-
+- cursor `String` `OPTIONAL` - This for pagination. API response can contain a maximum of 100 records but if there are 2000 records present and to get everything, you can use this cursor argument. This argument should not be mentioned inside of _search_query_json_ and should always be sent separately.
+Please check [How to use cusor?](#introduction/cursor-in-api-query-for-pagination/how-to-use-the-cursor?) for learning more about cusor.
 
 
 #### Fields in Response Body
@@ -218,7 +213,7 @@ Depending upon whether 'json' or 'xml' was passed in format field of query,  A J
     + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
     + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
     + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
-    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
 
     
 + Response 200 (application/json)
@@ -270,11 +265,12 @@ Depending upon whether 'json' or 'xml' was passed in format field of query,  A J
 
 ### Job Search Using GET Request [GET]
 
-Above query and in general all the queries illulstrated here work for POST as well as GET. In other places we have
-used GET for uniformity, but if you prefer POST then that should work equally well. Please click on the link above to
-open console to try out POST request for search. All the description and details remains same as the GET request above TODO give link
+Instead of using a [post request](https://jobspikr.docs.apiary.io/#reference/job-search-api/endpoint-details/job-search-using-post-requests), 
+you can use get request as well to get job records. All the header parameter, body parameters are same for both `POST` and `GET` request.
 
+Few libraries doesn't support adding body to a GET request, hence we've enabled POST request as well for all the endpoints disucssed in this documentation. 
 
+That said, this doumentation tool that we've used also doesn't support body in GET request, hence trying out this particular request in the right side console won't work.
 
 + Request (application/json)
   
@@ -305,7 +301,7 @@ open console to try out POST request for search. All the description and details
     + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
     + cursor: cursor_value (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
     + format: json (string) - The format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
-    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
 
     
 + Response 200 (application/json)
@@ -360,21 +356,24 @@ open console to try out POST request for search. All the description and details
 
 ## Endpoint Details [/active_jobs_checker]
 
-### Check if given uniq_ids are still active [POST]
+### Check if jobs are still active using POST request [POST]
 
-Here you can pass a list of uniq ids and check if those are still listed on the site.
+Here you can pass a list of `uniq_ids` or `job_urls` to check the current status of those jobs on their respective source websites.
 
 #### Fields in Request Header
 
-- client_id (string) - This is your client id which can be obtained from here TODO The question
-- client_auth_key (string) - Client auth key can be obtained from here TODO. Please use sandbox key for testing and production key for the actual key so that your job credits are not lost in testing
+- client_id `String` `REQUIRED` - This is your unique client identification string to access Jobspikr API
+
+- client_auth_key `String` `REQUIRED` - This your unique client authentication key to access Jobspikr API
+
+Both `client_id` and `client_auth_key` can be obtained from here. https://app.jobspikr.com/my/api_details#authentication. 
 
 #### Fields in Request Body
 
-- uniq_ids : (Array[String],Conditionally REQUIRED) : Uniq ids of the job data that is consumed from JobspikrAPI in an array. Either uniq_ids or job_urls must be present in the request body.
-- job_urls : (Array[String],Conditionally REQUIRED) : Job urls of the job data that is consumed from JobspikrAPI in an array. Either uniq_ids or job_urls must be present in the request body.
+- uniq_ids `Array[String]` `Conditionally REQUIRED` : Uniq ids of the job data that is consumed from JobspikrAPI in an array. Either uniq_ids or job_urls must be present in the request body.
+- job_urls `Array[String]` `Conditionally REQUIRED` : Job urls of the job data that is consumed from JobspikrAPI in an array. Either uniq_ids or job_urls must be present in the request body.
 
-- format (OPTIONAL) : The format of the response from the API. Its an optional field with the default value as json.
+- format `OPTIONAL` : The format of the response from the API. Its an optional field with the default value as json.
 
 
 #### Fields in Response Body
@@ -456,11 +455,14 @@ Depending upon whether 'json' or 'xml' was passed in format field of query,  A J
         + missing_uniq_ids - An Array of all uniq_ids passed which doesn't have a matching job present.
         + missing_job_urls - An Array of all job_urls passed which doesn't have a matching job present.
       
-### Check if given uniq_ids are still active [POST]
+### Check if jobs are still active using GET request [GET]
 
-Previous query for checkign current status of job you can use POST method too. It takes a list of uniq_ids or urls and returns the result
+Instead of using a [post request](#reference/job-status-api/endpoint-details/check-if-jobs-are-still-active-using-post-request), 
+you can use get request as well to get current status of job records. All the header parameter, body parameters are same for both `POST` and `GET` request.
 
-All the description and details remains same as the GET query above TODO give link
+Few libraries doesn't support adding body to a GET request, hence we've enabled POST request as well for all the endpoints disucssed in this documentation. 
+
+That said, this doumentation tool that we've used also doesn't support body in GET request, hence trying out this particular request in the right side console won't work.
 
 
 + Request (application/json)
@@ -529,7 +531,7 @@ All the description and details remains same as the GET query above TODO give li
 
 # Group Aggregation API 
 
-* Still under development
+* Still under development 
 
 Description of the aggregation API
 
@@ -541,8 +543,11 @@ In the example below we'll illustrate the API params as well as an example to ag
 
 #### Fields in Request Header
 
-- client_id (string) - This is your client id which can be obtained from here TODO The question
-- client_auth_key (string) - Client auth key can be obtained from here TODO. Please use sandbox key for testing and production key for the actual key so that your job credits are not lost in testing
+- client_id `String` `REQUIRED` - This is your unique client identification string to access Jobspikr API
+
+- client_auth_key `String` `REQUIRED` - This your unique client authentication key to access Jobspikr API
+
+Both `client_id` and `client_auth_key` can be obtained from here. https://app.jobspikr.com/my/api_details#authentication. 
 
 #### Fields in Request Body
 
@@ -619,8 +624,11 @@ In the example below we'll illustrate the API params as well as an example to ag
 
 #### Fields in Request Header
 
-- client_id (string) - This is your client id which can be obtained from here TODO The question
-- client_auth_key (string) - Client auth key can be obtained from here TODO. Please use sandbox key for testing and production key for the actual key so that your job credits are not lost in testing
+- client_id `String` `REQUIRED` - This is your unique client identification string to access Jobspikr API
+
+- client_auth_key `String` `REQUIRED` - This your unique client authentication key to access Jobspikr API
+
+Both `client_id` and `client_auth_key` can be obtained from here. https://app.jobspikr.com/my/api_details#authentication. 
 
 #### Fields in Request Body
 
@@ -738,7 +746,7 @@ which mentions the value that needs to be matched. In this case the query will l
     + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
     + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
     + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
-    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
     
 + Response 200 (application/json)
     
@@ -747,8 +755,6 @@ which mentions the value that needs to be matched. In this case the query will l
 
 Our API responses can be of _json_ of _xml_. By default all our API responses are in _json_ format. If we need get the results
 in _xml_ format we can user `format` parameter with the value as `xml`.
-
-TODO Desc
 
 + Request (application/json)
   
@@ -778,7 +784,7 @@ TODO Desc
     + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
     + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
     + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
-    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
 
 + Response 200 (application/json)
 
@@ -821,7 +827,7 @@ To get all the jobs with _sales_ in the description, we can use `query_string` q
     + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
     + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
     + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
-    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
 
 + Response 200 (application/json)
 
@@ -868,7 +874,7 @@ both in any order as response from the API.
     + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
     + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
     + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
-    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
 
     
 + Response 200 (application/json)
@@ -914,7 +920,7 @@ Here we should pass `["job_title", "job_description"]` as value to `fields`
     + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
     + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
     + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
-    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
 
     
 + Response 200 (application/json)
@@ -959,7 +965,7 @@ To get all the jobs with either sales or marketing present in the title we can j
     + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
     + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
     + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
-    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
 
     
 + Response 200 (application/json)
@@ -1003,7 +1009,7 @@ To get all the jobs with either "python developer" or "java developer" present i
     + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
     + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
     + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
-    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
 
 
 + Response 200 (application/json)
@@ -1090,7 +1096,7 @@ United States and Canada as well. Hence to be more specific we use both city and
     + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
     + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
     + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
-    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
 
     
 + Response 200 (application/json)
@@ -1172,7 +1178,7 @@ To get all the jobs from 'Texas, United States', we have to use the same `bool` 
     + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
     + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
     + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
-    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
 
     
 + Response 200 (application/json)
@@ -1352,7 +1358,7 @@ Here the `should` condition acts as `OR` and must condition acts as `AND`. Hence
     + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
     + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
     + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
-    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
 
     
 + Response 200 (application/json)
@@ -1394,7 +1400,7 @@ field we can use the `exists` query specifiying the field name as as a value for
     + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
     + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
     + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
-    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
 
 
 + Response 200 (application/json)
@@ -1447,7 +1453,7 @@ To get only jobs that has either `contact_email` or `contact_phone_number` or bo
     + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
     + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
     + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
-    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
 
 
 + Response 200 (application/json)
@@ -1510,7 +1516,7 @@ To ingore records based on the value we can use `bool` query with `must_not` con
     + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
     + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
     + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
-    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
 
     
 + Response 200 (application/json)
@@ -1561,7 +1567,7 @@ mention it as the field in the range query.
     + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
     + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
     + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
-    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
 
     
 + Response 200 (application/json)
@@ -1612,48 +1618,7 @@ To get all the jobs which are posted between a specific date range and has salar
     + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
     + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
     + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
-    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
-
-    
-+ Response 200 (application/json)
-
-### Get me list of all jobs posted in last 2 days TODO TO add in the api, todo need to add it in api  [GET]
-
-
-Desc TODO
-
-    
-
-+ Request (application/json)
-  
-    + Body
-            
-            {
-                "size": 50,
-                "cursor": 1549411216369936,
-                "format": "json",
-                "search_query_json": {
-                "query_string": {
-                    "default_field": "job_title",
-                    "query": "\"techincal writer\""
-                                    }
-                                }
-            }
-
-        
-    + Headers
-    
-
-                client_id: Replace with your client_id
-                client_auth_key:  Replace with your client_auth_key
-
-    
-+ Attributes
-
-    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
-    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
-    + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
-    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
 
     
 + Response 200 (application/json)
@@ -1698,7 +1663,7 @@ To get only valid jobs i.e, job which are not expired, we can use `query_string`
     + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
     + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
     + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
-    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
 
     
 + Response 200 (application/json)
@@ -1743,7 +1708,7 @@ It can used only by organizations that are in _Business Plan or Above_.
     + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
     + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
     + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
-    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
 
     
 + Response 200 (application/json)
@@ -1797,7 +1762,7 @@ To find all the 'product manager' jobs from United States, we can use `bool` que
     + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
     + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
     + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
-    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
 
     
 + Response 200 (application/json)
@@ -1851,7 +1816,7 @@ To find all the 'data scientist' jobs from Australia or Newzeland, we can use `b
     + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
     + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
     + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
-    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
 
     
 + Response 200 (application/json)
@@ -1917,7 +1882,7 @@ and the country in the `must` and mentioning the city in `must_not`
     + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
     + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
     + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
-    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
 
     
 + Response 200 (application/json)
@@ -1973,7 +1938,7 @@ combination of `must` and `must_not` as given in the previous example.
     + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
     + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
     + format: json (string) - Format of the respone from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
-    + search_query_json - String, this is the heart of query and supports lucene query syntax. You may find more details about it at TODO
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
 
     
 + Response 200 (application/json)
