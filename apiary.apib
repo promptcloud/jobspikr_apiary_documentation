@@ -34,7 +34,7 @@ https://api-bcp.jobspikr.com/v2
 
 ### API Keys
 
-To interact with the API, you need an API key., which can be taken from the link https://app.jobspikr.com/my/api_details#authentication. 
+To interact with the API, you need an API key., which can be taken from the link https://app.jobspikr.com/my/api_keys. 
 
 There are two sets of API keys - one for production, that hosts the actual data, and the other for sandbox, mainly used for testing purposes. 
 
@@ -45,7 +45,7 @@ Also, our Sandbox API contains only a subset of job data from `1 June 2019 -31 J
 
 The JobsPikr API uses API keys to authenticate your requests. You can view and manage your API keys here:
 
-https://app.jobspikr.com/my/api_details#authentication
+https://app.jobspikr.com/my/api_keys
 
 Authentication to the API can be performed in three ways:
 * HTTP Basic Auth - provide your client_id and client_auth_key as username and password in the Basic Auth.
@@ -65,7 +65,7 @@ All the examples in this documentation send client_id and client_auth_key via He
 
 If you are just exploring the API or testing your queries or for any form of tests, please use the Sandbox API credentials obtained from here
 
-https://app.jobspikr.com/my/api_details#authentication
+https://app.jobspikr.com/my/api_keys
 
 * Jobs available for Sandbox credentials are only a subset of job data from `1 June 2019 -31 July 2019`.
 * Jobs accessed from API using sandbox credentials don't count towards anything.
@@ -205,7 +205,7 @@ This endpoint is the workhorse of the API.  the backbone of API can Regular job 
 
 - client_auth_key `String` `REQUIRED` - This your unique client authentication key to access JobsPikr API
 
-Both `client_id` and `client_auth_key` can be obtained from here. https://app.jobspikr.com/my/api_details#authentication. 
+Both `client_id` and `client_auth_key` can be obtained from here. https://app.jobspikr.com/my/api_keys. 
 
 Please use Sandbox API credentials for testing our API responses, so that your job credits are not deducted  while testing our API.
 
@@ -422,7 +422,7 @@ Here you can pass a list of `uniq_ids` or `job_urls` to check the current status
 
 - client_auth_key `String` `REQUIRED` - This your unique client authentication key to access JobsPikr API
 
-Both `client_id` and `client_auth_key` can be obtained from here. https://app.jobspikr.com/my/api_details#authentication. 
+Both `client_id` and `client_auth_key` can be obtained from here. https://app.jobspikr.com/my/api_keys. 
 
 #### Fields in Request Body
 
@@ -603,7 +603,7 @@ In the example below, we'll illustrate the API params as well as an example to a
 
 - client_auth_key `String` `REQUIRED` - This is your unique client authentication key to access JobsPikr API
 
-Both `client_id` and `client_auth_key` can be obtained from here. https://app.jobspikr.com/my/api_details#authentication. 
+Both `client_id` and `client_auth_key` can be obtained from here. https://app.jobspikr.com/my/api_keys. 
 
 #### Fields in Request Body
 
@@ -684,7 +684,7 @@ In the example below, we'll illustrate the API params as well as an example to a
 
 - client_auth_key `String` `REQUIRED` - This your unique client authentication key to access JobsPikr API
 
-Both `client_id` and `client_auth_key` can be obtained from here. https://app.jobspikr.com/my/api_details#authentication. 
+Both `client_id` and `client_auth_key` can be obtained from here. https://app.jobspikr.com/my/api_keys. 
 
 #### Fields in Request Body
 
