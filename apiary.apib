@@ -184,11 +184,21 @@ In case you still need more help, please reach out to our support and we would b
 
 `duplicate_of`: This is a system-generated field. If the system finds this job to be duplicate/very similar to another job, that jobs id will be updated here since this job is a duplicate of that job.
 
+`inferred_department_name`: This is a system-generated field. This field denotes the department to which a job belongs to, infered by our specialized ML model.
+
+`inferred_department_score`: This is a system-generated field. This field denotes the confidence score of the infered deparment name.
+
+`inferred_job_title`: This is a system-generated field. This field contains only the important information in a job title.
+
+`is_remote`: This is a system-generated field. This field denotes if a job posting is for a remote position or not.
 
 ## API Changelog
 
 * 2019-12-21 : Added option for freshness check
 * 2019-11-18 : Added Job status API
+* 2020-08-01 : Added `inferred_department_*` fields
+* 2020-08-01 : Added `inferred_job_title` field
+* 2020-08-21 : Added `is_remote` field
 
 
 # Group Job Search API
@@ -1998,3 +2008,123 @@ combination of `must` and `must_not` as given in the previous example.
 
     
 + Response 200 (application/json)
+
+
+### Find all 'java developer' remote jobs  [POST]
+
+To find all the 'java developer' remote jobs, we can use `bool` query and join the 'java developer' query and 'remote' query with a `must` condition.
+
+
++ Request (application/json)
+  
+    + Body
+            
+    {
+      "size": 50,
+      "format": "json",
+      "search_query_json": {
+        "bool": {
+          "must": [
+            {
+              "query_string": {
+                "default_field": "job_title",
+                "query": "\"java developer\""
+              }
+            },
+            {
+              "query_string": {
+                "default_field": "is_remote",
+                "query": true
+              }
+            }
+          ]
+        }
+      }
+    }
+      
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the response from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
+
+    
++ Response 200 (application/json)
+
+### Find all jobs from 'manufacturing' department  [POST]
+
+To find all the jobs from 'manufacturing' deparment, we can query for `inferred_department_name` to be 'manufacturing'.
+
+Note: As of now we've have only a defined [set of department](#reference/departments-list)
+
++ Request (application/json)
+  
+    + Body
+            
+    {
+      "size": 50,
+      "format": "json",
+      "search_query_json": {
+        "query_string": {
+          "default_field": "inferred_department_name",
+          "query": "\"manufacturing\""
+        }
+      }
+    }
+      
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the response from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
+
+    
++ Response 200 (application/json)
+
+# Group Departments List
+
+Following are the list of departments we recognize
+
+- Agriculture
+- Legal
+- ScienceAndEnergy
+- HR
+- Education
+- Marketing
+- Publishing
+- Facilities
+- Internet
+- Manufacturing
+- Admin
+- IT
+- Sales
+- Accounts
+- Retail
+- CustomerService
+- ServiceAndSecurity
+- Electrical
+- Finance
+- Travel
+- Healthcare
+- Hospitality
+- RealEstate
+- Restaurant
+- ArtAndArchitecture
