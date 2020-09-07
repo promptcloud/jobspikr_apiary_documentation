@@ -1778,7 +1778,50 @@ It can be used only by organizations that are in _Business Plan or Above_.
 
     
 + Response 200 (application/json)
+
+### Get all jobs belonging to F500 company sites [POST]
+
+* Applicable only for Enterprise plan(released 07 Sept 2020)
+
+To get all the jobs belonging to f500 company sites, we can use `dataset` parameter in the query.
+This parameter should be used in the same level as `search_query_json` and `cursor`.
+It can be used only by organizations that are in _Enterprise Plan_.
+
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "dataset": "f500",
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "\"technical writer\""
+                                    }
+                                }
+            }
+
+        
+    + Headers
     
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. The default value is 100
+    + cursor (optional, string) - It is used for pagination when the number of records are more than 100. Please check the details in the introduction section of API 
+    + format: json (string) - Format of the response from API. It can be either 'JSON' or 'xml'. This is an optional parameter with a default value of 'JSON'
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
+
+    
++ Response 200 (application/json)    
 
 ### Find all 'product manager' jobs from USA  [POST]
 
