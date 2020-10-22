@@ -595,6 +595,129 @@ That said, this documentation tool that we've used also doesn't support the body
         + missing_job_urls - An Array of all job_urls passed which doesn't have a matching job present.
 
 
+# Group Expired Jobs API
+
+
+## Endpoint Details [/expired_jobs]
+
+### Get all the jobs expired on a given date(previously consumed) [POST]
+
+Here you can pass a list of `uniq_ids` or `job_urls` to check the current status of those jobs on their respective source websites.
+
+#### Fields in Request Header
+
+- client_id `String` `REQUIRED` - This is your unique client identification string to access JobsPikr API
+
+- client_auth_key `String` `REQUIRED` - This your unique client authentication key to access JobsPikr API
+
+Both `client_id` and `client_auth_key` can be obtained from here. https://app.jobspikr.com/my/api_keys. 
+
+#### Fields in Request Body
+
+- size `Integer` `OPTIONAL`: The number of records to be returned for this request. It can be between 10 and 100. This is an optional parameter with a default value of 100. Size should not be a part of search query JSON and should be always sent separately as mentioned here.
+
+- cursor `String` `OPTIONAL` - This for pagination. API response can contain a maximum of 100 records but if there are 2000 records present and to get everything, you can use this cursor argument. This argument should not be mentioned inside of search_query_json and should always be sent separately. Please check How to use cusor? for learning more about cusor.
+
+- from_date `String` `OPTIONAL` - This field is to specify the date from which the expired jobs should be queries. All the consumed jobs, expired on or after this date will be returned. It should be in the format `YYYY-MM-DD`. The default value is the current date.
+
+- to_date `String` `OPTIONAL` - This field is to specify the date from which the expired jobs should be queries. All the consumed jobs, expired on or before this date will be returned. It should be in the format `YYYY-MM-DD`. The default value is the current date.
+
+- format `OPTIONAL`: The format of the response from the API. It’s an optional field with the default value as JSON.
+
+
+#### Fields in Response Body
+
+Depending upon whether 'JSON' or 'XML' was passed in format field of the query,  A JSON or XML object will be returned all the following properties.
+
+- status - The status of the response. It can be either these three
+    
+    _'success'_, if the request is processed successfully and data is returned.
+
+    _'no_data'_ in case the request processes  successfully but there is no more data present for the given query.
+
+    _'error'_ in case of some problem with processing the request.
+
+- message -  The message explaining the status of the response.
+- total_count - Number of expired records present for the given date. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` from the response as `cursor` in subsequent request to get all the data.
+- expired_jobs - An array of objects of job data that got expired in the given date. The format  could be JSON or XML, depending upon what was passed in the format field in the query.
+- next_cursor - The cursor to be used in the next request  to get the subsequent data for the query.
+- size - Number of records present in the current response.
+
+`NOTE:`
+    Sandbox response for this endpoint, returns only the same response for any number of request.
+
++ Request (application/json)
+
+    + Body
+        
+            {
+                "size": "10",
+                "date": "2020-10-20"
+            }
+    + Headers 
+
+            client_id: Replace with your client_id
+            client_auth_key:  Replace with your client_auth_key
+    
+    + Attributes
+            
+        + size : `size` (string,optional) - The number of records to be returned for this request. It can be between 10 and 100. This is an optional parameter with a default value of 100. Size should not be a part of search query JSON and should be always sent separately as mentioned here.
+        + cursor : `cursor` (string,optional) - This for pagination. API response can contain a maximum of 100 records but if there are 2000 records present and to get everything, you can use this cursor argument. This argument should not be mentioned inside of search_query_json and should always be sent separately. Please check How to use cusor? for learning more about cusor.
+        + from_date : `from_date` (string,optional) - This field is to specify the date from which the expired jobs should be queries. All the consumed jobs, expired on or after this date will be returned. It should be in the format `YYYY-MM-DD`. The default value is the current date.
+        + to_date : `to_date` (string,optional) - This field is to specify the date from which the expired jobs should be queries. All the consumed jobs, expired on or before this date will be returned. It should be in the format `YYYY-MM-DD`. The default value is the current date.
+        + format : `format` (string,optional) - The format of the response from the API. It’s an optional field with the default value as JSON.
+
+
++ Response 200 (application/json)
+
+    + Body
+        
+            {
+                "status": "success",
+                "message": "Data present.",
+                "total_count": 2521,
+                "size": 50,
+                "next_cursor": 1602273627739147,
+                "expired_jobs": [
+                {
+                    "uniq_id": "33b145f9ce4ebb1b9dc71b35b478c8e0",
+                    "url": "https://www.indeed.fr/voir-emploi?jk=5a06c36a232c06cb",
+                    "has_expired": true,
+                    "latest_expiry_check_date": "2020-10-19",
+                    "post_date": "2020-10-05",
+                    "cursor": 1602201625494528
+                },
+                {
+                    "uniq_id": "096970dca1dd0154331d57a2abaff448",
+                    "url": "https://offre-demploi.monster.fr/assistant-adminstrative-et-comptable-h-f-saverdun-occ-fr-randstad/220797855",
+                    "has_expired": true,
+                    "latest_expiry_check_date": "2020-10-19",
+                    "post_date": "2020-10-04",
+                    "cursor": 1602201625597926
+                },
+                {
+                    "uniq_id": "72d2052e2070b7658010a0f374a1d5ff",
+                    "url": "https://www.indeed.co.uk/viewjob?jk=f03a61fa2b0d708e",
+                    "has_expired": true,
+                    "latest_expiry_check_date": "2020-10-19",
+                    "post_date": "2020-10-05",
+                    "cursor": 1602201625899236
+                },
+                ...
+                ]
+
+            } 
+        
+    + Attributes
+
+        + status - The status of the response. It can be either these three
+        + message -  The message explaining the status of the response.
+        + total_count - Number of expired records present for the given date. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` from the response as `cursor` in subsequent request to get all the data.
+        + expired_jobs - An array of objects of job data that got expired in the given date. The format  could be JSON or XML, depending upon what was passed in the format field in the query.
+        + next_cursor - The cursor to be used in the next request  to get the subsequent data for the query.
+        + size - Number of records present in the current response.
+
+
 # Group Aggregation API 
 
 * Still under development 
