@@ -624,7 +624,7 @@ That said, this documentation tool that we've used also doesn't support the body
 
 ### Get all the jobs expired on a given date(previously consumed) [POST]
 
-Here you can pass a list of `uniq_ids` or `job_urls` to check the current status of those jobs on their respective source websites.
+Here you can get all the consumed jobs that are, expired in the given date range.
 
 #### Fields in Request Header
 
@@ -741,10 +741,6 @@ Depending upon whether 'JSON' or 'XML' was passed in format field of the query, 
 
 
 # Group Aggregation API 
-
-* Still under development 
-
-Description of the aggregation API
 
 ## Endpoint details [/aggregate_data]
 
@@ -1924,14 +1920,13 @@ It can be used only by organizations that are in _Business Plan or Above_.
     
 + Response 200 (application/json)
 
-### Get all jobs belonging to F500 company sites [POST]
+### Get all jobs posted on job boards as well as F500 company sites [POST]
 
 * Applicable only for Enterprise plan(released 07 Sept 2020)
 
-To get all the jobs belonging to f500 company sites, we can use `dataset` parameter in the query.
+To get all the jobs posted on job board and f500 company  websites,we can use `dataset` parameter in the query wiht the value ['job_board', 'f500'].
+Even if the dataset is paramter is not specified, data from both job board sites and f500 sites will be returned in the response by default, the client plan has f500 sites access.
 This parameter should be used in the same level as `search_query_json` and `cursor`.
-It can be used only by organizations that are in _Enterprise Plan_.
-
 
 + Request (application/json)
   
@@ -1941,7 +1936,7 @@ It can be used only by organizations that are in _Enterprise Plan_.
                 "size": 50,
                 "cursor": 1549411216369936,
                 "format": "json",
-                "dataset": "f500",
+                "dataset": ["job_board", "f500"],
                 "search_query_json": {
                 "query_string": {
                     "default_field": "job_title",
@@ -1968,6 +1963,50 @@ It can be used only by organizations that are in _Enterprise Plan_.
     
 + Response 200 (application/json)    
 
+### Get jobs only from to F500 company websites [POST]
+
+* Applicable only for Enterprise plan(released 07 Sept 2020)
+
+To get all the jobs posted only on company sites, we can use `dataset` parameter in the query with the value ['f500'].
+When the your plan has access to f500 dataset, by default when dataset params in not used in the request, both job board data and f500 data is returned in the API response.
+If you need to get only jobs from f500 company websites, then you can specify 'dataset' : ['f500'] in the request.
+This parameter should be used in the same level as `search_query_json` and `cursor`.
+
+
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "size": 50,
+                "cursor": 1549411216369936,
+                "format": "json",
+                "dataset": ["f500"],
+                "search_query_json": {
+                "query_string": {
+                    "default_field": "job_title",
+                    "query": "\"technical writer\""
+                                    }
+                                }
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. The default value is 100
+    + cursor (optional, string) - It is used for pagination when the number of records are more than 100. Please check the details in the introduction section of API 
+    + format: json (string) - Format of the response from API. It can be either 'JSON' or 'xml'. This is an optional parameter with a default value of 'JSON'
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
+
+    
++ Response 200 (application/json)    
 
 ### Get all jobs posted by companies(not agencies) [POST]
 
