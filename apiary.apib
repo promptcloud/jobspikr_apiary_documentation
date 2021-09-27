@@ -438,7 +438,7 @@ Both `client_id` and `client_auth_key` can be obtained from here. https://app.jo
 
 - size `Integer` `OPTIONAL`: The number of records to be returned for this request. It can be between 10 and 100. This is an optional parameter with a default value of 100. Size should not be a part of search query JSON and should be always sent separately as mentioned here.
 
-- cursor `String` `OPTIONAL` - This for pagination. API response can contain a maximum of 100 records but if there are 2000 records present and to get everything, you can use this cursor argument. This argument should not be mentioned inside of search_query_json and should always be sent separately. Please check How to use cusor? for learning more about cusor.
+- cursor `String` `OPTIONAL` - This for pagination. API response can contain a maximum of 100 records but if there are 2000 records present and to get everything, you can use this cursor argument. This argument should not be mentioned inside of search_query_json and should always be sent separately. Please check [How to use cusor?](#introduction/cursor-in-api-query-for-pagination) for learning more about cusor.
 
 - from_date `String` `OPTIONAL` - This field is to specify the date from which the expired jobs should be queries. All the consumed jobs, expired on or after this date will be returned. It should be in the format `YYYY-MM-DD`. The default value is the current date.
 
