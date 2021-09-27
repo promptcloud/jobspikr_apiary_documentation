@@ -12,6 +12,8 @@ There are three APIs here:
 
 * Expired Jobs API - get all (consumed) jobs expired on a given date range.
 
+* Aggregation API - get aggregated counts based on the query given.
+
 
 This document covers the concepts related to API, its usage and some illustrative examples and use cases. 
 
@@ -26,11 +28,23 @@ Details on some of the concepts to better use our API.
 
 Our regular endpoint is
 
-https://api.jobspikr.com/v2 .
+Base URL: `https://api.jobspikr.com/v2`
 
 In case of persistent issues, you may also use the following URL as fallback
 
-https://api-bcp.jobspikr.com/v2 
+Base URL: `https://api-bcp.jobspikr.com/v2`
+
+
+Endpoint differs based on the resource that needs to be accessed
+
+| Resource | URL |
+|--|--|
+| Job Data | https://api.jobspikr.com/v2/data |
+| Expired Jobs | https://api.jobspikr.com/v2/expired_jobs |
+| Aggregate Data | https://api.jobspikr.com/v2/aggregate_data |
+
+Please refer to [Reference section](#reference/job-search-api), for more details on how to access each resource.
+
 
 ### API Keys
 
@@ -215,7 +229,7 @@ Please use Sandbox API credentials for testing our API responses, so that your j
 - format `String` `OPTIONAL` - The format of the response from API. It can be either 'JSON' or 'XML'. This is an optional parameter with a default value of 'JSON'.
 
 - cursor `String` `OPTIONAL` - This for pagination. API response can contain a maximum of 100 records but if there are 2000 records present and to get everything, you can use this cursor argument. This argument should not be mentioned inside of _search_query_json_ and should always be sent separately.
-Please check [How to use cusor?](#introduction/cursor-in-api-query-for-pagination/how-to-use-the-cursor?) for learning more about cusor.
+Please check [How to use cusor?](#introduction/cursor-in-api-query-for-pagination) for learning more about cusor.
 
 
 #### Fields in Response Body
