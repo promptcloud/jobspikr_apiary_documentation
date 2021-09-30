@@ -422,6 +422,8 @@ That said, this documentation tool that we've used also doesn't support body in 
 
 ### Get all the jobs expired on a given date(previously consumed) [POST]
 
+* This is an addon feature enabled on request. Please contact sales team.
+
 Here you can get all the consumed jobs that are, expired in the given date range.
 
 #### Fields in Request Header
@@ -436,13 +438,13 @@ Both `client_id` and `client_auth_key` can be obtained from here. https://app.jo
 
 - size `Integer` `OPTIONAL`: The number of records to be returned for this request. It can be between 10 and 100. This is an optional parameter with a default value of 100. Size should not be a part of search query JSON and should be always sent separately as mentioned here.
 
-- cursor `String` `OPTIONAL` - This for pagination. API response can contain a maximum of 100 records but if there are 2000 records present and to get everything, you can use this cursor argument. This argument should not be mentioned inside of search_query_json and should always be sent separately. Please check [How to use cusor?](#introduction/cursor-in-api-query-for-pagination) for learning more about cusor.
+- cursor `String` `OPTIONAL` - This for pagination. API response can contain a maximum of 100 records but if there are 2000 records present and to get everything, you can use this cursor argument. Please check [How to use cusor?](#introduction/cursor-in-api-query-for-pagination) for learning more about cusor.
 
 - from_date `String` `OPTIONAL` - This field is to specify the date from which the expired jobs should be queried. All the consumed jobs, expired on or after this date will be returned. It should be in the format `YYYY-MM-DD`. The default value is the current date.
 
 - to_date `String` `OPTIONAL` - This field is to specify the date from which the expired jobs should be queried. All the consumed jobs, expired on or before this date will be returned. It should be in the format `YYYY-MM-DD`. The default value is the current date.
 
-- date `String` `OPTIONAL` - This field is to specify the date on which the expired jobs should be queries. All the consumed jobs, expired on this date will be returned.It should be in the format `YYYY-MM-DD`. The default value is the current date.
+- date `String` `OPTIONAL` - This field is to specify the date on which the expired jobs should be queried. All the consumed jobs, expired on this date will be returned.It should be in the format `YYYY-MM-DD`. The default value is the current date.
 Presence of this field will take precedence over the `form_date` and `to_date` parameters.
 
 - format `OPTIONAL`: The format of the response from the API. It’s an optional field with the default value as JSON.
@@ -2930,6 +2932,60 @@ we need to do a two level aggregation on top of inferred_city as field_1 and com
         + `aggregate_by` : `aggregate_by` (string,REQUIRED) -  The json which instructs the API to aggregate based on the fields provided. Two levels of aggregation are possible
 
 + Response 200 (application/json)
+
+## Expired Jobs API [/expired_jobs]
+
+### Get all previously consumed jobs expired on 24th April 2021 [POST]
+
+To get all previously consumed jobs expired on 24th of April, we can send request to expired_jobs api endpoint with date parameter
+
++ Request (application/json)
+
+    + Body
+    
+    {
+        "size": 10,
+        "date": "2021-04-24"
+    }
+
+
+    + Headers 
+
+            client_id: Replace with your client_id
+            client_auth_key:  Replace with your client_auth_key
+
+    + Attributes
+    
+        + `size` : `size` (number,OPTIONAL) - The number of records to be returned for this request. It can be between 10 and 100
+        + `date` : `date` (string,OPTIONAL) -  The date on which the expired jobs should be queried.
+
++ Response 200 (application/json)
+
+### Get all previously consumed jobs expired between 10th May 2021 to 15th May 2021 [POST]
+
+To get all previously consumed jobs expired between 10th of May 2021 to 15th of May 2021, we can send request to expired_jobs api endpoint with `from_date` and `to_date` parameter in the request body.
+
++ Request (application/json)
+
+    + Body
+    
+    {
+        "size": 10,
+        "from_date": "2021-05-10",
+        "to_date": "2021-05-15"
+    }
+
+
+    + Headers 
+
+            client_id: Replace with your client_id
+            client_auth_key:  Replace with your client_auth_key
+
+    + Attributes
+    
+        + `size` : `size` (number,OPTIONAL) - The number of records to be returned for this request. It can be between 10 and 100
+        + `from_date` : `date` (string,OPTIONAL) -  The date from which the expired jobs should be queried.
+        + `to_date` : `date` (string,OPTIONAL) -  The date to which the expired jobs should be queried.
 
 # Group Departments List
 
