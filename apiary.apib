@@ -438,9 +438,12 @@ Both `client_id` and `client_auth_key` can be obtained from here. https://app.jo
 
 - cursor `String` `OPTIONAL` - This for pagination. API response can contain a maximum of 100 records but if there are 2000 records present and to get everything, you can use this cursor argument. This argument should not be mentioned inside of search_query_json and should always be sent separately. Please check [How to use cusor?](#introduction/cursor-in-api-query-for-pagination) for learning more about cusor.
 
-- from_date `String` `OPTIONAL` - This field is to specify the date from which the expired jobs should be queries. All the consumed jobs, expired on or after this date will be returned. It should be in the format `YYYY-MM-DD`. The default value is the current date.
+- from_date `String` `OPTIONAL` - This field is to specify the date from which the expired jobs should be queried. All the consumed jobs, expired on or after this date will be returned. It should be in the format `YYYY-MM-DD`. The default value is the current date.
 
-- to_date `String` `OPTIONAL` - This field is to specify the date from which the expired jobs should be queries. All the consumed jobs, expired on or before this date will be returned. It should be in the format `YYYY-MM-DD`. The default value is the current date.
+- to_date `String` `OPTIONAL` - This field is to specify the date from which the expired jobs should be queried. All the consumed jobs, expired on or before this date will be returned. It should be in the format `YYYY-MM-DD`. The default value is the current date.
+
+- date `String` `OPTIONAL` - This field is to specify the date on which the expired jobs should be queries. All the consumed jobs, expired on this date will be returned.It should be in the format `YYYY-MM-DD`. The default value is the current date.
+Presence of this field will take precedence over the `form_date` and `to_date` parameters.
 
 - format `OPTIONAL`: The format of the response from the API. It’s an optional field with the default value as JSON.
 
