@@ -90,6 +90,24 @@ https://app.jobspikr.com/my/api_keys
 * Response will always have two fields `status` and `message`.
 * Other fields in the response might vary depending upon the endpoint accessed and will be described later in this document.
 
+## API Rate Limit
+
+JobsPikr API uses rate limiting to safeguard against bursts of incoming traffic.
+Based on the resource accessed, rate limiting logic differs.
+
+| URL | # of req allowed per minute | # of req allowed per hour |
+|--|--|--|
+| https://api.jobspikr.com/v2/data | 100 | 5000 |
+| https://api.jobspikr.com/v2/aggregate_data | 10 | 100 |
+
+Any request beyond the given rate limit will give the following response from the API with the status code 429.
+
+```
+{
+    "status": "error",
+    "message": "Retry later"
+}
+```
 
 ## Cursor in API Query for pagination
 
@@ -186,6 +204,8 @@ In case you still need more help, please reach out to our support and we would b
 |inferred_min_experience | The minimum number of years of past experience required for the job. | Integer | System generated field using a machine learning model. Will be available only if job is published in English language.|
 |inferred_max_experience | The maximum number of years of past experience required for the job. | Integer | System generated field using a machine learning model. Will be available only if job is published in English language.|
 |inferred_seniority | Expected seniority level requirement of the job. | String | System generated field using a machine learning model. Will be available only if job is published in English language. Possible values:1. Entry Level - for freshers and junior-level jobs2. Mid Level -  for mid-senior or managerial jobs3. Executive Level - for CXO, Director, VP-level jobs|
+|apply_url | The application url of the job available on the job posting page. | String | Extracted if and as available from the source website |
+|logo_url | The logo url of hiring company from the job posting page. | String | Extracted if and as available from the source website |
 
 
 ## API Changelog
@@ -197,7 +217,8 @@ In case you still need more help, please reach out to our support and we would b
 * 2020-10-21 : Added `inferred_salary_*` fields
 * 2020-10-21 : Added `inferred_company_type_*` fields
 * 2021-02-26 : Added `inferred_seniority_level` and `inferred_*_experience` fields
-* 2021-06-09 : Added `apply_url` fields
+* 2021-06-09 : Added `apply_url` field
+* 2021-08-21 : Added `logo_url` field
 
 
 # Group Job Search API
@@ -206,7 +227,7 @@ In case you still need more help, please reach out to our support and we would b
 
 ### Job Search Using POST Requests [POST]
 
-This endpoint is the workhorse of the API.  the backbone of API can Regular job searches. Please note that even though this is a GET request, even the POST request gives the same result. Which we have illustrated later
+This endpoint is the workhorse of the API. This API endpoint can perform Regular job searches. Please note that even though this is a GET request, even the POST request gives the same result. Which we have illustrated later
 
 #### Fields in Request Header
 
@@ -336,6 +357,23 @@ you can use get request as well to get job records. All the header parameter, bo
 Few libraries don’t support adding body to a GET request, hence we've enabled POST request as well for all the endpoints discussed in this documentation. 
 
 That said, this documentation tool that we've used also doesn't support body in GET request, hence trying out this particular request in the right-side console won't work.
+
+#### Rate Limit
+
+| | |
+|--|--|
+|Maximum number of requests allowed per minute |100|
+|Maximum number of requests allowed per hour|5000|
+| | |
+
+Any request beyond the given rate limit will give the following response from the API with the status code 429.
+
+```
+{
+    "status": "error",
+    "message": "Retry later"
+}
+```
 
 + Request (application/json)
   
@@ -580,6 +618,23 @@ W.r.t size.  size parameters(size_1, size_2) when used can’t go above 10000.
 * If two level of aggregations are used, **size_1 + (size_1 * size_2)** should be <= 10000
 
 Like other endpoints in  JobsPikr, here too GET and POST both request types will work.
+
+#### Rate Limit
+
+| | |
+|--|--|
+|Maximum number of requests allowed per minute |10|
+|Maximum number of requests allowed per hour|100|
+| | |
+
+Any request beyond the given rate limit will give the following response from the API with the status code 429.
+
+```
+{
+    "status": "error",
+    "message": "Retry later"
+}
+```
 
 ## Sample Requests [/aggregate_data]
 
