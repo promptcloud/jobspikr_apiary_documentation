@@ -2024,6 +2024,50 @@ mention it as the field in the range query.
     
 + Response 200 (application/json)
 
+### Find all jobs posted in last 10 days [POST]
+
+To get all the which is posted in the last 10 days, we can do a relative date query.
+
++ Request (application/json)
+  
+    + Body
+
+        {
+            "size": 50,
+            "format": "json",
+            "search_query_json": {
+                "bool": {
+                    "must": [
+                        {
+                            "range": {
+                                "post_date": {
+                                    "gte": "now-10d/d",
+                                    "lte": "now"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+
+    
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
+    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
+    + format: json (string) - Format of the response from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
+
+    
++ Response 200 (application/json)
 
 ### Find all jobs posted between 1st July 2019 and 7th July 2019 and has salary offered field present [POST]
 
@@ -2074,7 +2118,6 @@ To get all the jobs which are posted between a specific date range and has a sal
 
     
 + Response 200 (application/json)
-
 
 ### Find all valid jobs(the ones which have not expired) [POST]
 
