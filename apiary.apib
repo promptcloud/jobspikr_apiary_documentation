@@ -3173,6 +3173,30 @@ Following are the parameters that need to be sent inside the configuration param
 
 - access_secret `String` `REQUIRED` - New “access_secret” of aws s3 account
 
++ Request (application/json)
+
+    + Body
+    
+    {
+        "id": 10,
+        "access_key": "XXXXXXXXXXX",
+        "access_secret": "XXXXXXXXXXXXXXXXXXXXXXXX"
+    }
+
+
+    + Headers 
+
+            client_id: Replace with your client_id
+            client_auth_key:  Replace with your client_auth_key
+
+    + Attributes
+    
+        + `id` : `size` (number,REQUIRED) - Id of the integration(export configuration) can be [found here](https://app.jobspikr.com/my/export_data) 
+        + `access_key` : `date` (string,REQUIRED) -  The new access key that should be updated.
+        + `access_secret` : `date` (string,REQUIRED) -  The new access secret that should be updated.
+        
++ Response 201 (application/json)
+
 
 # Group Departments List
 
