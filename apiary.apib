@@ -1150,7 +1150,73 @@ Since the field parameter is ‘post_date’ then ‘size’ parameter is not re
             + group_by_field_2
                 + key - Aggregated value on the field mentioned in the request as the value of field_2.
                 + count - The number of job data carrying the aggregated value
-       
+
+# Group Integration Account Credentials Update API
+
+This endpoint updates AWS S3 credentials for a given jobspikr export. Test file will be uploaded to the folder again using these new credentials to re-verify the account.
+
+## AWS S3 [/jobspikr_integration_accounts/aws_s3_credentials]
+
+### Update AWS S3 credentials Using PUT Requests [PUT]
+
+#### Fields in Request Header
+
+- client_id `String` `REQUIRED` - This is your unique client identification string to access JobsPikr API
+
+- client_auth_key `String` `REQUIRED` - This your unique client authentication key to access JobsPikr API
+
+Both `client_id` and `client_auth_key` can be obtained from here. https://app.jobspikr.com/my/api_keys.
+
+Please note: Sandbox API credentials are restricted while using this endpoint.
+
+#### Fields in Request Body
+
+-  configuration `JSON` `REQUIRED` - This object should have a “credentials” object. More information on this field can be found [here](#reference/examples/update-aws-s3-credentials-api)
+    - id `INTEGER` `REQUIRED` - The EXPORT ID for which the credential should be updated. The [`export_id` can be found here](https://app.jobspikr.com/my/export_data) 
+    - access_key `REQUIRED` - The new access key which should be updated.
+    - access_secret `REQUIRED` - The new access secret which should be updated.
+
+#### Fields in Response Body
+
+- status - The status of the response. It can be either of these two statuses:
+
+    _'success'_, if the request is processed successfully and the credentials are updated.
+
+    _'error'_ in case of some problem with processing the request.
+
+- message -  The message explaining the status of the response.
+
++ Request (application/json)
+ 
+    + Body
+            
+    {
+        "configuration": {
+            "id": <Export ID>,
+            "access_key": <new access_key>,
+            "access_secret": <new access_secret>
+            }
+    }
+
+        
++ Headers
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "message": "Credentials updated successfully!",
+            }
+        
++ Attributes
+        + status - Status of the response. It can have one of the 2 values : 'success', 'error'
+        + message - Message explaining the status of the response
+
 # Group Examples
 
 ## Job Search API [/data]
@@ -2397,7 +2463,7 @@ Old records(jobs posted before Feb 2021) doesn't have these fields, hence queryi
     + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. The default value is 100
     + cursor (optional, string) - It is used for pagination when the number of records are more than 100. Please check the details in the introduction section of API 
     + format: json (string) - Format of the response from API. It can be either 'JSON' or 'xml'. This is an optional parameter with a default value of 'JSON'
-    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
+    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search_query_json?)
 
     
 + Response 200 (application/json)
@@ -3084,6 +3150,29 @@ To get all previously consumed jobs expired between 10th of May 2021 to 15th of 
         + `size` : `size` (number,OPTIONAL) - The number of records to be returned for this request. It can be between 10 and 100
         + `from_date` : `date` (string,OPTIONAL) -  The date from which the expired jobs should be queried.
         + `to_date` : `date` (string,OPTIONAL) -  The date to which the expired jobs should be queried.
+        
++ Response 200 (application/json)
+
+## Integration Account Credentials API [/jobspikr_integration_accounts/aws_s3_credentials]
+
+### Update Integration account credentials for AWS S3 [PUT]
+
+Following are the parameters that need to be sent inside the configuration parameter. In this case the query will look like this:
+```
+    "configuration": {
+        "id": <export id>,
+        "access_key": "<new access_key>",
+"access_secret": "<new access_secret>"
+
+    }
+```
+
+- id `Int` `REQUIRED` - ID of the jobspikr integration whose account credentials you want to update. It can be [found here](https://app.jobspikr.com/my/export_data)
+
+- access_key `String` `REQUIRED`- New “access_key” of aws s3 account.
+
+- access_secret `String` `REQUIRED` - New “access_secret” of aws s3 account
+
 
 # Group Departments List
 
