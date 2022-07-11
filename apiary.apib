@@ -483,7 +483,7 @@ Both `client_id` and `client_auth_key` can be obtained from here. https://app.jo
 - to_date `String` `OPTIONAL` - This field is to specify the date from which the expired jobs should be queried. All the consumed jobs, expired on or before this date will be returned. It should be in the format `YYYY-MM-DD`. The default value is the current date.
 
 - date `String` `OPTIONAL` - This field is to specify the date on which the expired jobs should be queried. All the consumed jobs, expired on this date will be returned.It should be in the format `YYYY-MM-DD`. The default value is the current date.
-Presence of this field will take precedence over the `form_date` and `to_date` parameters.
+Presence of this field will take precedence over the `from_date` and `to_date` parameters.
 
 - format `OPTIONAL`: The format of the response from the API. It’s an optional field with the default value as JSON.
 
@@ -1171,7 +1171,7 @@ Please note: Sandbox API credentials are restricted while using this endpoint.
 
 #### Fields in Request Body
 
--  configuration `JSON` `REQUIRED` - This object should have a “credentials” object. More information on this field can be found [here](#reference/examples/update-aws-s3-credentials-api)
+-  configuration `JSON` `REQUIRED` - This object should have a “credentials” object. More information on this field can be found [here](#reference/examples/integration-account-credentials-api/update-integration-account-credentials-for-aws-s3)
     - id `INTEGER` `REQUIRED` - The EXPORT ID for which the credential should be updated. The [`export_id` can be found here](https://app.jobspikr.com/my/export_data) 
     - access_key `REQUIRED` - The new access key which should be updated.
     - access_secret `REQUIRED` - The new access secret which should be updated.
