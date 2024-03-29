@@ -206,6 +206,7 @@ In case you still need more help, please reach out to our support and we would b
 |inferred_seniority_level | Expected seniority level requirement of the job. | String | System generated field using a machine learning model. Will be available only if job is published in English language. Possible values:1. Entry Level - for freshers and junior-level jobs2. Mid Level -  for mid-senior or managerial jobs3. Executive Level - for CXO, Director, VP-level jobs|
 |apply_url | The application url of the job available on the job posting page. | String | Extracted if and as available from the source website |
 |logo_url | The logo url of hiring company from the job posting page. | String | Extracted if and as available from the source website |
+|is_salary_estimated | Status field to check if the given job has a salary that is estimated by the job board. | Boolean | Expected values are "true" or "false". This is a system generated field that indicates whether the salary details are estimated or not.|
 
 
 ## API Changelog
@@ -219,7 +220,7 @@ In case you still need more help, please reach out to our support and we would b
 * 2021-02-26 : Added `inferred_seniority_level` and `inferred_*_experience` fields
 * 2021-06-09 : Added `apply_url` field
 * 2021-08-21 : Added `logo_url` field
-
+* 2024-04-28 : Added `is_salary_estimated` field
 
 # Group Job Search API
 
