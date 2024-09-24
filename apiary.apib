@@ -227,11 +227,11 @@ Jobspikr API applies a lot of validations before sending out the data response.
 
 | Error message | Status code | Error type| 
 |--- | --- | --- | ---|
-| "search_query_json params should be present." | 400 | search_query_json is required field. |
-| "search_query_json params should be present." | 400 | search_query_json field is empty hash |
-| "The dataset param should be of type Array" | 403 | "dataset" filter should be in array format. |
-| "Please check your query json" | 400 | search_query_json not in proper format. |
-| "This organization has not subscribed to a plan yet." | 402 | No active subscription available for Data feeds. |
+| search_query_json params should be present. | 400 | search_query_json is required field. |
+| search_query_json params should be present. | 400 | search_query_json field is empty hash |
+| The dataset param should be of type Array | 403 | "dataset" filter should be in array format. |
+| Please check your query json | 400 | search_query_json not in proper format. |
+| This organization has not subscribed to a plan yet. | 402 | No active subscription available for Data feeds. |
 | Volume credits are over for this organization. | 403 | All available credits for the current credit cycle has been exhausted. |
 | Daily limit reached for the trial. Please upgrade to get more data. | 403 | For trial subscriptions, if daily limit is set and it gets exhausted for the remaining day. |
 | Subscription is expired for this organization. | 403 | Data feeds subscription is non-active with expired state. |
