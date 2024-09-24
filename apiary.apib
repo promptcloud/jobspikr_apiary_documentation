@@ -222,6 +222,50 @@ In case you still need more help, please reach out to our support and we would b
 * 2021-08-21 : Added `logo_url` field
 * 2024-04-28 : Added `is_salary_estimated` field
 
+## Error codes
+Jobspikr API applies a lot of validations before sending out the data response.
+
+| Error message | Status code | Error type| 
+|--- | --- | --- | ---|
+| "search_query_json params should be present." | 400 | search_query_json is required field. |
+| "search_query_json params should be present." | 400 | search_query_json field is empty hash |
+| "The dataset param should be of type Array" | 403 | "dataset" filter should be in array format. |
+| "Please check your query json" | 400 | search_query_json not in proper format. |
+| "This organization has not subscribed to a plan yet." | 402 | No active subscription available for Data feeds. |
+| Volume credits are over for this organization. | 403 | All available credits for the current credit cycle has been exhausted. |
+| Daily limit reached for the trial. Please upgrade to get more data. | 403 | For trial subscriptions, if daily limit is set and it gets exhausted for the remaining day. |
+| Subscription is expired for this organization. | 403 | Data feeds subscription is non-active with expired state. |
+| Subscription is cancelled for this organization. Please subscribe again to continue getting data. | 403 | Data feeds subscription is non-active with cancelled state. |
+| Subscription is deleted for this organization. Please subscribe again to continue getting data. | 403 | Data feeds subscription is non-active with deleted state. |
+| Subscription is put on hold for this organization. Please subscribe again to continue getting data. | 403 | Data feeds subscription is non-active with put on hold state. |
+| The inferred salary related keywords are allowed in the search_query_json only for growth plan and above | 400 | Data feeds subscription does not have access to inferred salary fields. |
+| The inferred salary time unit related keywords are allowed in the search_query_json only for growth plan and above | 400 | Data feeds subscription does not have access to inferred salary time unit fields. |
+| The is_salary_estimated keyword is allowed in the search_query_json only for growth plan and above | 400 | Data feeds subscription does not have access to inferred salary estimation fields. |
+| The inferred onet fields are allowed in the search_query_json only for selective clients. Please reach out to us | 400 | Data feeds subscription does not have access to onet fields. |
+| The inferred education level are allowed in the search_query_json only for selective clients. Please reach out to us | 400 | Data feeds subscription does not have access to inferred education fields. |
+| The inferred co industry related keywords are allowed in the search_query_json only for selective client. Please reach out to us. | 400 | Data feeds subscription does not have access to inferred company industry fields. |
+| The inferred department related keywords are allowed in the search_query_json only for growth plan and above | 400 | Data feeds subscription does not have access to inferred department fields. |
+| The inferred seniority related keywords are allowed in the search_query_json only for growth plan and above | 400 | Data feeds subscription does not have access to inferred seniority fields. |
+| The is_remote keyword is allowed in the search_query_json only for growth plan and above | 400 | Data feeds subscription does not have access to is_remote field. |
+| The apply_url keyword is allowed in the search_query_json only for growth plan and above | 400 | Data feeds subscription does not have access to apply_url field. |
+| The logo_url keyword is allowed in the search_query_json only for growth plan and above | 400 | Data feeds subscription does not have access to logo_url field. |
+| The inferred skills keyword is allowed in the search_query_json only for business plan and above | 400 | Data feeds subscription does not have access to inferred skills fields. |
+| The inferred company type related keywords are allowed in the search_query_json only for business plan and above | 400 | Data feeds subscription does not have access to inferred company type field. |
+| The inferred_iso3_lang_code field is not allowed to filter in your existing plan. | 400 | Data feeds subscription does not have access to inferred iso language fields. |
+| The inferred_posted_by or inferred_posted_by_score field doesn't exist so please use inferred_company_type or inferred_company_type_score instead | 400 | Data feeds subscription does not have access to inferred posted by field. |
+| The inferred_co_website_url field is not allowed to filter in your existing plan. | 400 | Data feeds subscription does not have access to inferred company website url field. |
+| The current plan doesn't allow f500 dataset access | 403 | Data feeds subscription does not have access to f500 dataset field. |
+| API credentials are valid but the organization is not found.Please check your environments | 401 | Valid client_auth_key not provided. |
+| Invalid client_id or client_auth_key | 401 | client_id or client_auth_key not provided. |
+| Allowed range for size is between 10 and 100 | 400 | Provided size is not between 10 and 100. |
+| Invalid time_unit passed in post_date | 400 | Date format is not in dd-mm-yyyy format. |
+| Post date start date can not be more than restricted dates | 403 | Post date filter provided is not within the permitted range. |
+| Allowed values for format are json and xml | 400 | "format" filter is not json or xml. |
+| The exclude duplicates should be either true or false | 403 | "exclude_duplicates" filter should be a boolean value |
+| The dataset parameter is not allowed in search_query_json, please use dataset parameter outside search_query_json instead | 400 | If "dataset" filter is used inside "search_query_json" |
+| The dataset param can either be job_board or f500 | 403 | "dataset" filter should be either "job_board" or "f500" |
+| The exclude duplicates keyword is not allowed for this plan | 403 | exclude_duplicate" filter is not enabled for the subscribed data feeds plan. |
+
 # Group Job Search API
 
 ## Endpoint Details [/data]
