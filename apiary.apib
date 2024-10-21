@@ -185,7 +185,7 @@ In case you still need more help, please reach out to our support and we would b
 |uniq_id | An alpha-numeric value created by JobsPikr to uniquely identify a job posting | String | System generated field|
 |html_job_description | Job description extracted along with HTML elements |  | Extracted if and as available from the source website. Useful in retaining styling w.r.t. the source.|
 |valid_through | Validity date of the advertised job | Date (in YYYY-MM-DD format) | Extracted if and as available from the source website|
-|has_expired | JobsPikr re-crawl URLs for job downloaded by a user every 7th day from post_date for 30 days to establish if the job is active or not. | Boolean | Expected values are "true" or "false". Access to the field requires an add-on subscription to Freshness Check (also known as Job Expiry API)|
+|has_expired | JobsPikr re-crawls URLs for jobs downloaded by a user every 7th day from post_date for 60 days to establish if the job is active or not. | Boolean | Expected values are "true" or "false". Access to the field requires an add-on subscription to Freshness Check (also known as Job Expiry API)|
 |latest_expiry_check_date | Date on which the latest has_expired check was performed | Date (in YYYY-MM-DD format) | System generated field|
 |inferred_iso3_lang_code | 3-character language code to identify the language in which the job is published | String | System generated field|
 |duplicate_status | JobsPikr checks if a job is duplicate of another job collected from a different source website. | String | Possible values are:NA: if duplicate status check is yet to be performed True: if the job is found to be a duplicateFalse: if the job is found to be unique|
@@ -222,11 +222,12 @@ In case you still need more help, please reach out to our support and we would b
 * 2021-08-21 : Added `logo_url` field
 * 2024-04-28 : Added `is_salary_estimated` field
 
+
 ## Error codes
 Jobspikr API applies a lot of validations before sending out the data response.
 
 | Error message | Status code | Error type| 
-|--- | --- | --- | ---|
+|--- | --- | --- |
 | search_query_json params should be present. | 400 | search_query_json is required field. |
 | search_query_json params should be present. | 400 | search_query_json field is empty hash |
 | The dataset param should be of type Array | 403 | "dataset" filter should be in array format. |
@@ -265,6 +266,8 @@ Jobspikr API applies a lot of validations before sending out the data response.
 | The dataset parameter is not allowed in search_query_json, please use dataset parameter outside search_query_json instead | 400 | If "dataset" filter is used inside "search_query_json" |
 | The dataset param can either be job_board or f500 | 403 | "dataset" filter should be either "job_board" or "f500" |
 | The exclude duplicates keyword is not allowed for this plan | 403 | exclude_duplicate" filter is not enabled for the subscribed data feeds plan. |
+| test 
+
 
 # Group Job Search API
 
@@ -2516,7 +2519,7 @@ Old records(jobs posted before Feb 2021) doesn't have these fields, hence queryi
 ### Get all "Mid Level" jobs, where inferred minimum experience required is higher than 8 years [POST]
 
 
-To get all the "Mid Level" jobs in terms of seniority, we can use `inferred_seniority` field in the query.
+To get all the "Mid Level" jobs in terms of seniority, we can use `inferred_seniority_level` field in the query.
 
 The example shows how to fetch all the "Mid Level" jobs which has minum experience criteria higher than 8 years.
 
