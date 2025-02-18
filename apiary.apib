@@ -97,8 +97,8 @@ Based on the resource accessed, rate limiting logic differs.
 
 | URL | # of req allowed per minute | # of req allowed per hour |
 |--|--|--|
-| https://api.jobspikr.com/v2/data | 100 | 5000 |
-| https://api.jobspikr.com/v2/aggregate_data | 10 | 100 |
+| https://api.jobspikr.com/v2/data | 200 | 10000 |
+| https://api.jobspikr.com/v2/aggregate_data | 20 | 200 |
 
 Any request beyond the given rate limit will give the following response from the API with the status code 429.
 
