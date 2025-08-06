@@ -1254,7 +1254,7 @@ This API uses a robust internal database built from job listings to return relev
 
 ## Sample Requests [/search_locations]
 
-### Location Autocomplete using GET Requests [GET]
+### Location Autocomplete using POST Requests [POST]
 
 #### Fields in Request Header
 
@@ -1316,6 +1316,7 @@ Sandbox API credentials do not work for this API
     
             {
                 "status": "success",
+                "message": "Data available",
                 "data": [
                             { "state": "New York", "country": "United States" },
                             { "city": "New York", "state": "New York", "country": "United States" },
