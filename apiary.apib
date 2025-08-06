@@ -99,6 +99,7 @@ Based on the resource accessed, rate limiting logic differs.
 |--|--|--|
 | https://api.jobspikr.com/v2/data | 200 | 10000 |
 | https://api.jobspikr.com/v2/aggregate_data | 20 | 200 |
+| https://api.jobspikr.com/v2/search_locations | 200 | 10000 |
 
 Any request beyond the given rate limit will give the following response from the API with the status code 429.
 
@@ -1202,6 +1203,133 @@ Since the field parameter is ‘post_date’ then ‘size’ parameter is not re
             + group_by_field_2
                 + key - Aggregated value on the field mentioned in the request as the value of field_2.
                 + count - The number of job data carrying the aggregated value
+                
+# Group Location Autocomplete API
+
+#### Overview
+
+The Location Autocomplete API provides smart, real-time suggestions for cities, states, and countries based on user input. It enhances the search experience by dynamically surfacing relevant locations as the user types.
+
+#### Key Benefits
+
+- Seamless integration into job search filters, forms, or search bars
+- Fast, accurate, and location-aware suggestions
+- Built on real-time data derived from live job postings
+
+#### How It Works
+
+This API uses a robust internal database built from job listings to return relevant geographic suggestions based on free-text input. It mirrors the location search behavior on the JobsPikr platform.
+
+#### Rate Limit
+
+| | |
+|--|--|
+|Maximum number of requests allowed per minute |200|
+|Maximum number of requests allowed per hour|10,000|
+| | |
+
+#### Response Limits
+
+- Returns up to 30 matched location results per request
+- Input is searched against city, state, and country fields
+
+
+#### Requirements
+
+- Input must be at least 3 characters long to trigger results
+- JSON format for both request and response
+
+
+#### Use Cases
+
+- Job board search filters
+- Resume upload forms
+- Location targeting for analytics or insights platforms
+- Any system needing intelligent, structured location input
+
+#### Infrastructure & Performance
+
+- The API is powered by a fast, Redis-based location index
+- Regular updates ensure up-to-date coverage across global locations
+
+## Sample Requests [/search_locations]
+
+### Location Autocomplete using GET Requests [GET]
+
+#### Fields in Request Header
+
+- client_id `String` `REQUIRED` - This is your unique client identification string to access JobsPikr API
+
+- client_auth_key `String` `REQUIRED` - This your unique client authentication key to access JobsPikr API
+
+Both `client_id` and `client_auth_key` can be obtained from here. https://app.jobspikr.com/my/api_keys.
+Sandbox API credentials do not work for this API
+
+#### Fields in Request Body
+
+- search_input `STRING` `REQUIRED` - A string with a minimum of 3 characters. The query term to search for matching locations.
+
+#### Fields in Response Body
+
+- status - The status of the response. It can be either these three
+    
+    _'success'_, if the request is processed successfully and data is returned.
+
+    _'error'_ in case of some problem with processing the request.
+
+- message -  The message explaining the status of the response.
+- data - An array of objects of location data. 
+- Each location can contain one or more than one of these 3 fields:
+
+    _'city'_, Optional
+    
+    _'state'_, Optional
+    
+    _'country'_, Mandatory
+
+
+ 
++ Request (application/json)
+  
+    + Body
+            
+            {
+                "search_input": "New york",
+            }
+
+        
+    + Headers
+    
+
+                client_id: Replace with your client_id
+                client_auth_key:  Replace with your client_auth_key
+
+    
++ Attributes
+
+    + search_input - A string with a minimum of 3 characters. The query term to search for matching locations.
+
+    
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+                "status": "success",
+                "data": [
+                            { "state": "New York", "country": "United States" },
+                            { "city": "New York", "state": "New York", "country": "United States" },
+                            { "city": "Albany", "state": "New York", "country": "United States" }
+                ]
+            }
+        
+    + Attributes
+
+        + status - Status of the response. It can have one of the 2 values : 'success' or 'error'
+        + message - Message explaining the status of the response
+        + data -  An array of objects of location data. Each location can contain these 3 fields(City - Optional, State - Optional, Country - Mandatory)
+
+
 
 # Group Integration Account Credentials Update API
 
