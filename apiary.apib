@@ -402,23 +402,6 @@ Depending upon whether 'JSON' or 'XML' was passed in the format field of the que
 
 ### Job Search Using GET Request [GET]
 
-#### Rate Limit
-
-| | |
-|--|--|
-|Maximum number of requests allowed per minute |200|
-|Maximum number of requests allowed per hour|10000|
-| | |
-
-Any request beyond the given rate limit will give the following response from the API with the status code 429.
-
-```
-{
-    "status": "error",
-    "message": "Retry later"
-}
-```
-
 + Request (application/json)
   
     + Body
@@ -496,6 +479,25 @@ Any request beyond the given rate limit will give the following response from th
         + size - Total number of jobs  present in the current page
         + job_credit_remaining -   Total number of job credits left to be consumed as per the active subscription.
         + job_data -  response data
+        
+## Rate Limits [/data-rate-limits]
+
+#### Rate Limit
+
+| | |
+|--|--|
+|Maximum number of requests allowed per minute |200|
+|Maximum number of requests allowed per hour|10000|
+| | |
+
+Any request beyond the given rate limit will give the following response from the API with the status code 429.
+
+```
+{
+    "status": "error",
+    "message": "Retry later"
+}
+```
 
 # Group Expired Jobs API
 
