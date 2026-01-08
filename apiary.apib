@@ -347,10 +347,10 @@ Depending upon whether 'JSON' or 'XML' was passed in the format field of the que
     
 + Attributes
 
-    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
-    + cursor (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
-    + format: json (string) - Format of the response from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
-    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
+    + size: 100  (optional,number) - The number of records to be returned with each response. It can be between 10 and 100. This is an optional parameter with a default value of 100.
+    + cursor (optional,string) - Cursor allows you to paginate to subsequent pages in your required dataset. With each response we send you the next cursor value which needs to be passed as input parameter for getting the next page. 
+    + format: json (string) - The format of the response from API. It can be either 'JSON' or 'XML'. This is an optional parameter with a default value of 'JSON'.
+    + search_query_json - Contains search filters. It takes JSON object as an input. You can use our [query builder](https://app.jobspikr.com/my/query_builder) to generate search query.
 
     
 + Response 200 (application/json)
@@ -397,17 +397,10 @@ Depending upon whether 'JSON' or 'XML' was passed in the format field of the que
         + total_count -  Total number of Jobs available for your requested query. 
         + size - Total number of jobs  present in the current page
         + job_credit_remaining -   Total number of job credits left to be consumed as per the active subscription.
-        + job_data -  An array of objects of job data. The format  could be JSON or XML, depending upon what was passed in the format field in the query
+        + job_data -  response data
 
 
 ### Job Search Using GET Request [GET]
-
-Instead of using a [post request](https://jobspikr.docs.apiary.io/#reference/job-search-api/endpoint-details/job-search-using-post-requests), 
-you can use get request as well to get job records. All the header parameter, body parameters are the same for both `POST` and `GET` request.
-
-Few libraries don’t support adding body to a GET request, hence we've enabled POST request as well for all the endpoints discussed in this documentation. 
-
-That said, this documentation tool that we've used also doesn't support body in GET request, hence trying out this particular request in the right-side console won't work.
 
 #### Rate Limit
 
@@ -435,11 +428,11 @@ Any request beyond the given rate limit will give the following response from th
                 "cursor": 1549411216369936,
                 "format": "json",
                 "search_query_json": {
-                "query_string": {
-                    "default_field": "job_title",
-                    "query": "\"techincal writer\""
-                                    }
-                                }
+                    "query_string": {
+                        "default_field": "job_title",
+                        "query": "\"techincal writer\""
+                    }
+                }
             }
 
         
@@ -452,10 +445,10 @@ Any request beyond the given rate limit will give the following response from th
     
 + Attributes
 
-    + size: 100  (optional,number) - number of records to be returned for this request. Can be any integer between 10 and 100. Default value is 100
-    + cursor: cursor_value (optional,string) - It is used for pagination when number of records are more than 100. Please check the details in introduction section of API 
-    + format: json (string) - The format of the response from API. It can be either 'json' or 'xml'. This is an optional parameter with a default value of 'json'
-    + search_query_json - String, this is the heart of query and supports elasticsearch query-dsl. You may [find more details here](#introduction/frequently-asked-questions/where-can-i-get-more-details-about-search-query-json?)
+    + size: 100  (optional,number) - The number of records to be returned with each response. It can be between 10 and 100. This is an optional parameter with a default value of 100.
+    + cursor: cursor_value (optional,string) - Cursor allows you to paginate to subsequent pages in your required dataset. With each response we send you the next cursor value which needs to be passed as input parameter for getting the next page. 
+    + format: json (string) - The format of the response from API. It can be either 'JSON' or 'XML'. This is an optional parameter with a default value of 'JSON'.
+    + search_query_json - Contains search filters. It takes JSON object as an input. You can use our [query builder](https://app.jobspikr.com/my/query_builder) to generate search query.
 
     
 + Response 200 (application/json)
@@ -470,39 +463,39 @@ Any request beyond the given rate limit will give the following response from th
                 "size": 8,
                 "job_credit_remaining": 65459,
                 "job_data": [
-                {
-                "job_type": "Full Time",
-                "cursor": 1576562594581424,
-                "inferred_country": "Sweden",
-                "country": "SE",
-                "crawl_timestamp": "2019-12-17 05:15:35 +0000",
-                "city": "Stockholm",
-                "inferred_city": "Stockholm",
-                "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
-                "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
-                "geo": "se",
-                "uniq_id": "3414773dd9c696848062a23e499df7fc",
-                "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
-                "job_board": "careerbuilder",
-                "state": "Stockholms län",
-                "inferred_state": "Stockholm",
-                "post_date": "2019-12-16",
-                "company_name": "Academic Work",
-                "category": "Sales Engineers",
-                "job_title": "Technical Writer till Worldline"
-                },
+                    {
+                        "job_type": "Full Time",
+                        "cursor": 1576562594581424,
+                        "inferred_country": "Sweden",
+                        "country": "SE",
+                        "crawl_timestamp": "2019-12-17 05:15:35 +0000",
+                        "city": "Stockholm",
+                        "inferred_city": "Stockholm",
+                        "html_job_description": "Job Description\nVi letar just nu efter en skicklig kommunikatör till Worldlines….",
+                        "url": "https://www.careerbuilder.se/jdp/technical-writer-till-worldline-j3m0gr790pp56wvksmh",
+                        "geo": "se",
+                        "uniq_id": "3414773dd9c696848062a23e499df7fc",
+                        "job_description": "Vi letar just nu efter en skicklig kommunikatör till Worldlines dynamiska team! I den här….",
+                        "job_board": "careerbuilder",
+                        "state": "Stockholms län",
+                        "inferred_state": "Stockholm",
+                        "post_date": "2019-12-16",
+                        "company_name": "Academic Work",
+                        "category": "Sales Engineers",
+                        "job_title": "Technical Writer till Worldline"
+                    }
                 ]
             }
         
     + Attributes
 
-        + status - Status of the response. It can have one of the 3 values: 'success', 'no_data' or 'error'
+        + status - Status of the response. It can have one of the 3 values : 'success', 'no_data' or 'error'
         + message - Message explaining the status of the response
-        + `total_count` - Number of records present for the query in request. If this number is more than 100 or the size specified in the request, you can use the `next_cursor` in subsequent request to get all the data.
-        + next_cursor - The cursor to be used in the next request to get the subsequent data for the query.
-        + size - Number of records  present in the current response
-        + job_credit_remaining -   Number of job data that is left to be consumed as per the plan subscription.
-        + job_data -  An array of objects of job data. The format could be JSON or XML, depending upon what was passed in the format field in the query
+        + next_cursor -  The cursor to be used in the next request to get the subsequent data for the query.
+        + total_count -  Total number of Jobs available for your requested query. 
+        + size - Total number of jobs  present in the current page
+        + job_credit_remaining -   Total number of job credits left to be consumed as per the active subscription.
+        + job_data -  response data
 
 # Group Expired Jobs API
 
